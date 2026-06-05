@@ -1,35 +1,47 @@
 import 'package:flutter/material.dart';
 
 import '../models/player.dart';
+import '../models/shop_item.dart';
+import 'animated_buddy.dart';
 import 'hp_bar.dart';
 import 'xp_bar.dart';
 
 class PlayerCard extends StatelessWidget {
-  const PlayerCard({super.key, required this.player});
+  const PlayerCard({super.key, required this.player, this.equippedItem});
 
   final Player player;
+  final ShopItem? equippedItem;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.white, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF3E5E9E).withValues(alpha: 0.10),
+            blurRadius: 28,
+            offset: const Offset(0, 14),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(26),
+        child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            Container(
-              width: 132,
-              height: 132,
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFE1A8),
-                borderRadius: BorderRadius.circular(36),
-                border: Border.all(color: const Color(0xFFFFB86B), width: 4),
-              ),
-              child: const Icon(Icons.self_improvement, size: 76, color: Color(0xFF5278C8)),
-            ),
+            AnimatedBuddy(equippedItem: equippedItem),
             const SizedBox(height: 16),
             Text('Aventurier du focus', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
             const SizedBox(height: 4),
-            Text('Niveau ${player.level}', style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              equippedItem == null ? 'Niveau ${player.level}' : 'Niveau ${player.level} - ${equippedItem!.name}',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 20),
             XpBar(xp: player.xp, xpToNextLevel: player.xpToNextLevel),
             const SizedBox(height: 14),
@@ -47,6 +59,7 @@ class PlayerCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }

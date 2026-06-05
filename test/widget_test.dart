@@ -15,8 +15,10 @@ void main() {
 
   testWidgets('FocusBuddy home renders', (tester) async {
     await tester.pumpWidget(const ProviderScope(child: FocusBuddyApp()));
+    await tester.pumpAndSettle();
 
     expect(find.text('FocusBuddy'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Commencer une session'), 160);
     expect(find.text('Commencer une session'), findsOneWidget);
   });
 }

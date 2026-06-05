@@ -8,6 +8,7 @@ class ShopItem {
     required this.description,
     required this.iconName,
     this.isPurchased = false,
+    this.isEquipped = false,
   });
 
   factory ShopItem.fromMap(Map<dynamic, dynamic> map) => ShopItem(
@@ -17,6 +18,7 @@ class ShopItem {
         description: map['description'] as String,
         iconName: map['iconName'] as String? ?? 'sparkle',
         isPurchased: map['isPurchased'] as bool? ?? false,
+        isEquipped: map['isEquipped'] as bool? ?? false,
       );
 
   final String id;
@@ -25,6 +27,7 @@ class ShopItem {
   final String description;
   final String iconName;
   final bool isPurchased;
+  final bool isEquipped;
 
   IconData get icon {
     return switch (iconName) {
@@ -43,14 +46,16 @@ class ShopItem {
         'description': description,
         'iconName': iconName,
         'isPurchased': isPurchased,
+        'isEquipped': isEquipped,
       };
 
-  ShopItem copyWith({bool? isPurchased}) => ShopItem(
+  ShopItem copyWith({bool? isPurchased, bool? isEquipped}) => ShopItem(
         id: id,
         name: name,
         price: price,
         description: description,
         iconName: iconName,
         isPurchased: isPurchased ?? this.isPurchased,
+        isEquipped: isEquipped ?? this.isEquipped,
       );
 }

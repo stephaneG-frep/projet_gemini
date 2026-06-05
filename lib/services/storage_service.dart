@@ -1,5 +1,6 @@
 import 'package:hive_flutter/hive_flutter.dart';
 
+import '../models/app_settings.dart';
 import '../models/player.dart';
 import '../models/shop_item.dart';
 
@@ -18,14 +19,14 @@ class StorageService {
   Future<void> init() async {
     await Hive.initFlutter();
     _box = await Hive.openBox<dynamic>(_boxName);
-    await _box.put(_settingsKey, settings);
+    await _box.put(_settingsKey, loadSettings().toMap());
   }
 
   Future<void> initForTests(String path) async {
     Hive.init(path);
     _box = await Hive.openBox<dynamic>(_boxName);
     await _box.clear();
-    await _box.put(_settingsKey, settings);
+    await _box.put(_settingsKey, loadSettings().toMap());
   }
 
   Player loadPlayer() {
@@ -56,11 +57,15 @@ class StorageService {
     return _box.put(_shopKey, items.map((item) => item.toMap()).toList());
   }
 
-  Map<String, dynamic> get settings {
+  AppSettings loadSettings() {
     final data = _box.get(_settingsKey);
     if (data is Map) {
-      return Map<String, dynamic>.from(data);
+      return AppSettings.fromMap(data);
     }
-    return {'pomodoroMinutes': 25, 'backgroundPenalty': 10};
+    final settings = AppSettings.initial();
+    saveSettings(settings);
+    return settings;
   }
+
+  Future<void> saveSettings(AppSettings settings) => _box.put(_settingsKey, settings.toMap());
 }

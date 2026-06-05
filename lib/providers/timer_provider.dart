@@ -3,8 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'player_provider.dart';
-
-const pomodoroDuration = Duration(minutes: 25);
+import 'settings_provider.dart';
 
 enum PomodoroStatus { idle, running, paused, completed, abandoned }
 
@@ -15,10 +14,10 @@ class PomodoroTimerState {
     required this.status,
   });
 
-  factory PomodoroTimerState.initial() {
-    return const PomodoroTimerState(
-      totalSeconds: 25 * 60,
-      remainingSeconds: 25 * 60,
+  factory PomodoroTimerState.initial({int totalSeconds = 25 * 60}) {
+    return PomodoroTimerState(
+      totalSeconds: totalSeconds,
+      remainingSeconds: totalSeconds,
       status: PomodoroStatus.idle,
     );
   }
@@ -52,12 +51,14 @@ class TimerNotifier extends Notifier<PomodoroTimerState> {
   @override
   PomodoroTimerState build() {
     ref.onDispose(() => _timer?.cancel());
-    return PomodoroTimerState.initial();
+    final totalSeconds = ref.watch(settingsProvider).focusSeconds;
+    return PomodoroTimerState.initial(totalSeconds: totalSeconds);
   }
 
   void start() {
     _timer?.cancel();
-    state = PomodoroTimerState.initial().copyWith(status: PomodoroStatus.running);
+    final totalSeconds = ref.read(settingsProvider).focusSeconds;
+    state = PomodoroTimerState.initial(totalSeconds: totalSeconds).copyWith(status: PomodoroStatus.running);
     _timer = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
   }
 
@@ -79,12 +80,13 @@ class TimerNotifier extends Notifier<PomodoroTimerState> {
 
   void abandon() {
     _timer?.cancel();
-    state = PomodoroTimerState.initial().copyWith(status: PomodoroStatus.abandoned);
+    state = PomodoroTimerState.initial(totalSeconds: state.totalSeconds).copyWith(status: PomodoroStatus.abandoned);
   }
 
   void reset() {
     _timer?.cancel();
-    state = PomodoroTimerState.initial();
+    final totalSeconds = ref.read(settingsProvider).focusSeconds;
+    state = PomodoroTimerState.initial(totalSeconds: totalSeconds);
   }
 
   Future<void> _tick() async {

@@ -61,4 +61,17 @@ class ShopNotifier extends Notifier<List<ShopItem>> {
     await _storage.saveShopItems(state);
     return true;
   }
+
+  Future<void> equip(String id) async {
+    final item = state.firstWhere((candidate) => candidate.id == id);
+    if (!item.isPurchased) {
+      return;
+    }
+
+    state = [
+      for (final candidate in state)
+        candidate.copyWith(isEquipped: candidate.id == id),
+    ];
+    await _storage.saveShopItems(state);
+  }
 }
