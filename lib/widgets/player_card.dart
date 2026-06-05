@@ -14,14 +14,17 @@ class PlayerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white, width: 2),
+        border: Border.all(color: isDark ? const Color(0xFF314971) : Colors.white, width: 2),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF3E5E9E).withValues(alpha: 0.10),
+            color: (isDark ? Colors.black : const Color(0xFF3E5E9E)).withValues(alpha: isDark ? 0.24 : 0.10),
             blurRadius: 28,
             offset: const Offset(0, 14),
           ),
@@ -73,9 +76,11 @@ class _Pill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: const Color(0xFFF2F6FF),
+        color: isDark ? const Color(0xFF243552) : const Color(0xFFF2F6FF),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Padding(

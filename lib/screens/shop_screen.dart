@@ -15,13 +15,24 @@ class ShopScreen extends ConsumerWidget {
     final items = ref.watch(shopProvider);
     final equippedItems = items.where((item) => item.isEquipped);
     final equippedItem = equippedItems.isEmpty ? null : equippedItems.first;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Boutique')),
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: isDark
+                  ? const [Color(0xFF101A2B), Color(0xFF0F1624)]
+                  : const [Color(0xFFFFF7EA), Color(0xFFF8F2E8)],
+            ),
+          ),
+          child: ListView(
+            padding: const EdgeInsets.all(20),
+            children: [
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(18),
@@ -135,7 +146,8 @@ class ShopScreen extends ConsumerWidget {
                 ),
               ),
             ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -150,9 +162,11 @@ class _Tag extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: const Color(0xFFF7F3EA),
+        color: isDark ? const Color(0xFF243552) : const Color(0xFFF7F3EA),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Padding(

@@ -18,15 +18,18 @@ class RewardScreen extends ConsumerWidget {
     final hasBonus = player.completedSessions > 0 && player.completedSessions % 4 == 0;
     final equippedItems = ref.watch(shopProvider).where((item) => item.isEquipped);
     final equippedItem = equippedItems.isEmpty ? null : equippedItems.first;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       body: SafeArea(
         child: DecoratedBox(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Color(0xFFFFF1C9), Color(0xFFEAF3FF)],
+              colors: isDark
+                  ? const [Color(0xFF1B2740), Color(0xFF101A2B), Color(0xFF0F1624)]
+                  : const [Color(0xFFFFF1C9), Color(0xFFEAF3FF)],
             ),
           ),
           child: Padding(

@@ -20,4 +20,9 @@ class SettingsNotifier extends Notifier<AppSettings> {
     state = state.copyWith(devTimerSeconds: seconds.clamp(5, 120));
     await _storage.saveSettings(state);
   }
+
+  Future<void> setDarkMode(bool enabled) async {
+    state = state.copyWith(darkModeEnabled: enabled);
+    await _storage.saveSettings(state);
+  }
 }

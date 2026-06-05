@@ -9,6 +9,8 @@ class HpBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final value = maxHp == 0 ? 0.0 : hp / maxHp;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -19,7 +21,7 @@ class HpBar extends StatelessWidget {
           child: LinearProgressIndicator(
             value: value.clamp(0, 1),
             minHeight: 12,
-            backgroundColor: const Color(0xFFFBE3E5),
+            backgroundColor: isDark ? const Color(0xFF442232) : const Color(0xFFFBE3E5),
             color: const Color(0xFFE85D75),
           ),
         ),

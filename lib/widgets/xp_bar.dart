@@ -9,6 +9,8 @@ class XpBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final value = xpToNextLevel == 0 ? 0.0 : xp / xpToNextLevel;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -19,8 +21,8 @@ class XpBar extends StatelessWidget {
           child: LinearProgressIndicator(
             value: value.clamp(0, 1),
             minHeight: 12,
-            backgroundColor: const Color(0xFFE8EDF8),
-            color: const Color(0xFF5278C8),
+            backgroundColor: isDark ? const Color(0xFF263753) : const Color(0xFFE8EDF8),
+            color: Theme.of(context).colorScheme.primary,
           ),
         ),
       ],

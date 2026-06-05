@@ -69,16 +69,19 @@ class _PomodoroScreenState extends ConsumerState<PomodoroScreen> {
     final settings = ref.watch(settingsProvider);
     final equippedItems = ref.watch(shopProvider).where((item) => item.isEquipped);
     final equippedItem = equippedItems.isEmpty ? null : equippedItems.first;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Quete Pomodoro')),
       body: SafeArea(
         child: DecoratedBox(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Color(0xFFEAF3FF), Color(0xFFFFF7EA)],
+              colors: isDark
+                  ? const [Color(0xFF101A2B), Color(0xFF16253C), Color(0xFF0F1624)]
+                  : const [Color(0xFFEAF3FF), Color(0xFFFFF7EA)],
             ),
           ),
           child: Padding(

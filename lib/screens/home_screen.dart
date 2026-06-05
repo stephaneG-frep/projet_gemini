@@ -6,6 +6,7 @@ import '../providers/settings_provider.dart';
 import '../providers/shop_provider.dart';
 import '../widgets/player_card.dart';
 import '../widgets/rpg_button.dart';
+import 'guide_screen.dart';
 import 'pomodoro_screen.dart';
 import 'shop_screen.dart';
 import 'stats_screen.dart';
@@ -21,11 +22,17 @@ class HomeScreen extends ConsumerWidget {
     final settings = ref.watch(settingsProvider);
     final equippedItems = ref.watch(shopProvider).where((item) => item.isEquipped);
     final equippedItem = equippedItems.isEmpty ? null : equippedItems.first;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('FocusBuddy'),
         actions: [
+          IconButton(
+            tooltip: "Mode d'emploi",
+            icon: const Icon(Icons.help_outline_rounded),
+            onPressed: () => Navigator.pushNamed(context, GuideScreen.routeName),
+          ),
           IconButton(
             tooltip: 'Statistiques',
             icon: const Icon(Icons.bar_chart_rounded),
@@ -40,11 +47,13 @@ class HomeScreen extends ConsumerWidget {
       ),
       body: SafeArea(
         child: DecoratedBox(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Color(0xFFF4F8FF), Color(0xFFFFF7EA), Color(0xFFF8F2E8)],
+              colors: isDark
+                  ? const [Color(0xFF101A2B), Color(0xFF16253C), Color(0xFF0F1624)]
+                  : const [Color(0xFFF4F8FF), Color(0xFFFFF7EA), Color(0xFFF8F2E8)],
             ),
           ),
           child: ListView(
@@ -68,7 +77,11 @@ class HomeScreen extends ConsumerWidget {
                 onPressed: () => Navigator.pushNamed(context, PomodoroScreen.routeName),
               ),
               const SizedBox(height: 14),
-              _DevModePanel(settingsSeconds: settings.devTimerSeconds, enabled: settings.devModeEnabled),
+              _OptionsPanel(
+                devSeconds: settings.devTimerSeconds,
+                devEnabled: settings.devModeEnabled,
+                darkEnabled: settings.darkModeEnabled,
+              ),
               const SizedBox(height: 18),
               Row(
                 children: [
@@ -97,19 +110,26 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-class _DevModePanel extends ConsumerWidget {
-  const _DevModePanel({required this.settingsSeconds, required this.enabled});
+class _OptionsPanel extends ConsumerWidget {
+  const _OptionsPanel({
+    required this.devSeconds,
+    required this.devEnabled,
+    required this.darkEnabled,
+  });
 
-  final int settingsSeconds;
-  final bool enabled;
+  final int devSeconds;
+  final bool devEnabled;
+  final bool darkEnabled;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Material(
-      color: const Color(0xFFFFFAF0),
+      color: isDark ? const Color(0xFF182235) : const Color(0xFFFFFAF0),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        side: const BorderSide(color: Color(0xFFFFD79A)),
+        side: BorderSide(color: isDark ? const Color(0xFF314971) : const Color(0xFFFFD79A)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -117,12 +137,22 @@ class _DevModePanel extends ConsumerWidget {
           children: [
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
+              secondary: const Icon(Icons.dark_mode_rounded),
+              title: const Text('Theme sombre'),
+              subtitle: const Text('Une ambiance nuit plus calme pour les sessions du soir.'),
+              value: darkEnabled,
+              onChanged: ref.read(settingsProvider.notifier).setDarkMode,
+            ),
+            const Divider(),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              secondary: const Icon(Icons.speed_rounded),
               title: const Text('Mode dev'),
-              subtitle: Text(enabled ? 'Sessions rapides pour tester les recompenses.' : 'Pomodoro classique de 25 minutes.'),
-              value: enabled,
+              subtitle: Text(devEnabled ? 'Sessions rapides pour tester les recompenses.' : 'Pomodoro classique de 25 minutes.'),
+              value: devEnabled,
               onChanged: ref.read(settingsProvider.notifier).setDevMode,
             ),
-            if (enabled) ...[
+            if (devEnabled) ...[
               const SizedBox(height: 6),
               Row(
                 children: [
@@ -130,11 +160,11 @@ class _DevModePanel extends ConsumerWidget {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Slider(
-                      value: settingsSeconds.toDouble(),
+                      value: devSeconds.toDouble(),
                       min: 5,
                       max: 60,
                       divisions: 11,
-                      label: '${settingsSeconds}s',
+                      label: '${devSeconds}s',
                       onChanged: (value) {
                         ref.read(settingsProvider.notifier).setDevTimerSeconds(value.round());
                       },
@@ -142,7 +172,7 @@ class _DevModePanel extends ConsumerWidget {
                   ),
                   SizedBox(
                     width: 44,
-                    child: Text('${settingsSeconds}s', textAlign: TextAlign.end),
+                    child: Text('${devSeconds}s', textAlign: TextAlign.end),
                   ),
                 ],
               ),

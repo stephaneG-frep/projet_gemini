@@ -15,6 +15,8 @@ class AnimatedBuddy extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return SizedBox.square(
       dimension: size,
       child: Stack(
@@ -23,10 +25,10 @@ class AnimatedBuddy extends StatelessWidget {
           DecoratedBox(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: const Color(0xFFFFE8B8),
+              color: isDark ? const Color(0xFF263B5F) : const Color(0xFFFFE8B8),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF5278C8).withValues(alpha: 0.16),
+                  color: (isDark ? const Color(0xFF91B7FF) : const Color(0xFF5278C8)).withValues(alpha: 0.16),
                   blurRadius: 24,
                   offset: const Offset(0, 12),
                 ),
@@ -46,13 +48,13 @@ class AnimatedBuddy extends StatelessWidget {
               bottom: size * 0.08,
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: const Color(0xFFFFB86B), width: 2),
+                  border: Border.all(color: Theme.of(context).colorScheme.secondary, width: 2),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(8),
-                  child: Icon(equippedItem!.icon, color: const Color(0xFF5278C8), size: size * 0.18),
+                  child: Icon(equippedItem!.icon, color: Theme.of(context).colorScheme.primary, size: size * 0.18),
                 ),
               ),
             ),
