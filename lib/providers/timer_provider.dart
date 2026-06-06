@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'kingdom_provider.dart';
 import 'player_provider.dart';
 import 'settings_provider.dart';
 
@@ -93,7 +94,11 @@ class TimerNotifier extends Notifier<PomodoroTimerState> {
     if (state.remainingSeconds <= 1) {
       _timer?.cancel();
       state = state.copyWith(remainingSeconds: 0, status: PomodoroStatus.completed);
-      await ref.read(playerProvider.notifier).completeFocusSession();
+      final kingdomBonus = ref.read(kingdomBonusProvider);
+      await ref.read(playerProvider.notifier).completeFocusSession(
+            bonusXp: kingdomBonus.xp,
+            bonusCoins: kingdomBonus.coins,
+          );
       return;
     }
     state = state.copyWith(remainingSeconds: state.remainingSeconds - 1);

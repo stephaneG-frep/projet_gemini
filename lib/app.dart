@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'providers/settings_provider.dart';
 import 'screens/guide_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/kingdom_screen.dart';
 import 'screens/pomodoro_screen.dart';
 import 'screens/reward_screen.dart';
 import 'screens/shop_screen.dart';
@@ -29,6 +30,7 @@ class FocusBuddyApp extends ConsumerWidget {
         ShopScreen.routeName: (_) => const ShopScreen(),
         RewardScreen.routeName: (_) => const RewardScreen(),
         GuideScreen.routeName: (_) => const GuideScreen(),
+        KingdomScreen.routeName: (_) => const KingdomScreen(),
       },
       initialRoute: HomeScreen.routeName,
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../providers/kingdom_provider.dart';
 import '../providers/player_provider.dart';
 import '../providers/shop_provider.dart';
 import '../providers/timer_provider.dart';
@@ -16,6 +17,7 @@ class RewardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final player = ref.watch(playerProvider);
     final hasBonus = player.completedSessions > 0 && player.completedSessions % 4 == 0;
+    final kingdomBonus = ref.watch(kingdomBonusProvider);
     final equippedItems = ref.watch(shopProvider).where((item) => item.isEquipped);
     final equippedItem = equippedItems.isEmpty ? null : equippedItems.first;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -41,7 +43,10 @@ class RewardScreen extends ConsumerWidget {
                 const SizedBox(height: 18),
                 Text('Quete reussie !', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900)),
                 const SizedBox(height: 12),
-                Text('+25 XP  +10 pieces${hasBonus ? '  +50 bonus' : ''}', style: Theme.of(context).textTheme.titleLarge),
+                Text(
+                  '+${25 + kingdomBonus.xp} XP  +${10 + kingdomBonus.coins} pieces${hasBonus ? '  +50 serie' : ''}',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
                 const SizedBox(height: 24),
                 Card(
                   child: Padding(
@@ -51,6 +56,8 @@ class RewardScreen extends ConsumerWidget {
                         _RewardLine(label: 'Niveau actuel', value: '${player.level}'),
                         _RewardLine(label: 'Serie', value: '${player.streak}'),
                         _RewardLine(label: 'Pieces', value: '${player.coins}'),
+                        if (kingdomBonus.xp > 0 || kingdomBonus.coins > 0)
+                          _RewardLine(label: 'Bonus royaume', value: '+${kingdomBonus.xp} XP  +${kingdomBonus.coins} pieces'),
                         if (equippedItem != null) _RewardLine(label: 'Objet equipe', value: equippedItem.name),
                       ],
                     ),

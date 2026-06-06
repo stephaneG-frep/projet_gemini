@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../models/kingdom_building.dart';
 import '../providers/player_provider.dart';
+import '../providers/kingdom_provider.dart';
 import '../providers/settings_provider.dart';
 import '../providers/shop_provider.dart';
 import '../widgets/player_card.dart';
 import '../widgets/rpg_button.dart';
 import 'guide_screen.dart';
+import 'kingdom_screen.dart';
 import 'pomodoro_screen.dart';
 import 'shop_screen.dart';
 import 'stats_screen.dart';
@@ -20,6 +23,8 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final player = ref.watch(playerProvider);
     final settings = ref.watch(settingsProvider);
+    final kingdom = ref.watch(kingdomProvider);
+    final pendingBuildings = kingdom.where((building) => !building.isBuilt).toList(growable: false);
     final equippedItems = ref.watch(shopProvider).where((item) => item.isEquipped);
     final equippedItem = equippedItems.isEmpty ? null : equippedItems.first;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -32,6 +37,11 @@ class HomeScreen extends ConsumerWidget {
             tooltip: "Mode d'emploi",
             icon: const Icon(Icons.help_outline_rounded),
             onPressed: () => Navigator.pushNamed(context, GuideScreen.routeName),
+          ),
+          IconButton(
+            tooltip: 'Royaume',
+            icon: const Icon(Icons.castle_rounded),
+            onPressed: () => Navigator.pushNamed(context, KingdomScreen.routeName),
           ),
           IconButton(
             tooltip: 'Statistiques',
@@ -70,6 +80,12 @@ class HomeScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 18),
               PlayerCard(player: player, equippedItem: equippedItem),
+              const SizedBox(height: 18),
+              _KingdomPreview(
+                builtCount: kingdom.where((building) => building.isBuilt).length,
+                totalCount: kingdom.length,
+                nextBuilding: pendingBuildings.isEmpty ? null : pendingBuildings.first,
+              ),
               const SizedBox(height: 20),
               RpgButton(
                 label: settings.devModeEnabled ? 'Session test ${settings.devTimerSeconds}s' : 'Commencer une session',
@@ -104,6 +120,132 @@ class HomeScreen extends ConsumerWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _KingdomPreview extends StatelessWidget {
+  const _KingdomPreview({
+    required this.builtCount,
+    required this.totalCount,
+    required this.nextBuilding,
+  });
+
+  final int builtCount;
+  final int totalCount;
+  final KingdomBuilding? nextBuilding;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final upcoming = nextBuilding;
+
+    return Material(
+      color: isDark ? const Color(0xFF182235) : Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(24),
+        onTap: () => Navigator.pushNamed(context, KingdomScreen.routeName),
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.castle_rounded, color: Theme.of(context).colorScheme.secondary),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Mon royaume',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+                    ),
+                  ),
+                  FilledButton.tonalIcon(
+                    onPressed: () => Navigator.pushNamed(context, KingdomScreen.routeName),
+                    icon: const Icon(Icons.visibility_rounded),
+                    label: const Text('Voir'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 92,
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(18),
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: isDark
+                                ? const [Color(0xFF243B63), Color(0xFF17243A)]
+                                : const [Color(0xFFBEE3FF), Color(0xFFEAF8D8)],
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      left: 14,
+                      bottom: 14,
+                      child: _TinyKingdomIcon(icon: Icons.cottage_rounded, active: builtCount >= 1),
+                    ),
+                    Positioned(
+                      left: 72,
+                      bottom: 24,
+                      child: _TinyKingdomIcon(icon: Icons.desktop_windows_rounded, active: builtCount >= 2),
+                    ),
+                    Positioned(
+                      right: 78,
+                      bottom: 18,
+                      child: _TinyKingdomIcon(icon: Icons.local_library_rounded, active: builtCount >= 3),
+                    ),
+                    Positioned(
+                      right: 18,
+                      bottom: 28,
+                      child: _TinyKingdomIcon(icon: Icons.castle_rounded, active: builtCount >= totalCount),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                upcoming == null
+                    ? 'Royaume complet pour cette premiere version.'
+                    : '$builtCount/$totalCount batiments construits - prochain chantier : ${upcoming.name}',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TinyKingdomIcon extends StatelessWidget {
+  const _TinyKingdomIcon({required this.icon, required this.active});
+
+  final IconData icon;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: active ? Theme.of(context).colorScheme.surface : Theme.of(context).disabledColor.withValues(alpha: 0.20),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Icon(
+          active ? icon : Icons.lock_rounded,
+          color: active ? Theme.of(context).colorScheme.primary : Theme.of(context).disabledColor,
+          size: 24,
         ),
       ),
     );

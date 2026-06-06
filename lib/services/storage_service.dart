@@ -1,6 +1,7 @@
 import 'package:hive_flutter/hive_flutter.dart';
 
 import '../models/app_settings.dart';
+import '../models/kingdom_building.dart';
 import '../models/player.dart';
 import '../models/shop_item.dart';
 
@@ -13,6 +14,7 @@ class StorageService {
   static const _playerKey = 'player';
   static const _shopKey = 'shop_items';
   static const _settingsKey = 'settings';
+  static const _kingdomKey = 'kingdom_buildings';
 
   late final Box<dynamic> _box;
 
@@ -55,6 +57,32 @@ class StorageService {
 
   Future<void> saveShopItems(List<ShopItem> items) {
     return _box.put(_shopKey, items.map((item) => item.toMap()).toList());
+  }
+
+  List<KingdomBuilding> loadKingdomBuildings(List<KingdomBuilding> defaults) {
+    final data = _box.get(_kingdomKey);
+    if (data is List) {
+      final saved = data.whereType<Map>().map(KingdomBuilding.fromMap).toList();
+      return [
+        for (final defaultBuilding in defaults)
+          saved
+              .firstWhere(
+                (building) => building.id == defaultBuilding.id,
+                orElse: () => defaultBuilding,
+              )
+              .copyWith(
+                isBuilt: saved
+                    .where((building) => building.id == defaultBuilding.id)
+                    .any((building) => building.isBuilt),
+              ),
+      ];
+    }
+    saveKingdomBuildings(defaults);
+    return defaults;
+  }
+
+  Future<void> saveKingdomBuildings(List<KingdomBuilding> buildings) {
+    return _box.put(_kingdomKey, buildings.map((building) => building.toMap()).toList());
   }
 
   AppSettings loadSettings() {

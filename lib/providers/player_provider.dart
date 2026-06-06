@@ -11,10 +11,10 @@ class PlayerNotifier extends Notifier<Player> {
   @override
   Player build() => _storage.loadPlayer();
 
-  Future<void> completeFocusSession() async {
-    var xp = state.xp + 25;
-    var coins = state.coins + 10;
-    var earnedCoins = state.totalCoinsEarned + 10;
+  Future<void> completeFocusSession({int bonusXp = 0, int bonusCoins = 0}) async {
+    var xp = state.xp + 25 + bonusXp;
+    var coins = state.coins + 10 + bonusCoins;
+    var earnedCoins = state.totalCoinsEarned + 10 + bonusCoins;
     var level = state.level;
     var maxHp = state.maxHp;
     var hp = state.hp;
