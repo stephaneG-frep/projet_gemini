@@ -10,10 +10,14 @@ class KingdomBuilding {
     required this.iconName,
     required this.bonusCoins,
     required this.bonusXp,
+    required this.maxLevel,
+    this.level = 0,
     this.isBuilt = false,
   });
 
   factory KingdomBuilding.fromMap(Map<dynamic, dynamic> map) {
+    final isBuilt = map['isBuilt'] as bool? ?? false;
+    final savedLevel = map['level'] as int?;
     return KingdomBuilding(
       id: map['id'] as String,
       name: map['name'] as String,
@@ -23,7 +27,9 @@ class KingdomBuilding {
       iconName: map['iconName'] as String,
       bonusCoins: map['bonusCoins'] as int? ?? 0,
       bonusXp: map['bonusXp'] as int? ?? 0,
-      isBuilt: map['isBuilt'] as bool? ?? false,
+      maxLevel: map['maxLevel'] as int? ?? 3,
+      level: savedLevel ?? (isBuilt ? 1 : 0),
+      isBuilt: isBuilt,
     );
   }
 
@@ -35,6 +41,8 @@ class KingdomBuilding {
   final String iconName;
   final int bonusCoins;
   final int bonusXp;
+  final int maxLevel;
+  final int level;
   final bool isBuilt;
 
   IconData get icon {
@@ -50,15 +58,33 @@ class KingdomBuilding {
     };
   }
 
+  bool get canUpgrade => isBuilt && level < maxLevel;
+  int get currentBonusCoins => isBuilt ? bonusCoins * level : 0;
+  int get currentBonusXp => isBuilt ? bonusXp * level : 0;
+  int get nextBonusCoins => bonusCoins * (level + 1).clamp(0, maxLevel);
+  int get nextBonusXp => bonusXp * (level + 1).clamp(0, maxLevel);
+  int get upgradeCost => (cost * (1.15 + (level * 0.65))).round();
+
   bool get hasBonus => bonusCoins > 0 || bonusXp > 0;
 
   String get bonusLabel {
     final parts = <String>[];
-    if (bonusXp > 0) {
-      parts.add('+$bonusXp XP/session');
+    if (currentBonusXp > 0) {
+      parts.add('+$currentBonusXp XP/session');
     }
-    if (bonusCoins > 0) {
-      parts.add('+$bonusCoins pieces/session');
+    if (currentBonusCoins > 0) {
+      parts.add('+$currentBonusCoins pieces/session');
+    }
+    return parts.join('  ');
+  }
+
+  String get nextBonusLabel {
+    final parts = <String>[];
+    if (nextBonusXp > currentBonusXp) {
+      parts.add('+${nextBonusXp - currentBonusXp} XP/session');
+    }
+    if (nextBonusCoins > currentBonusCoins) {
+      parts.add('+${nextBonusCoins - currentBonusCoins} pieces/session');
     }
     return parts.join('  ');
   }
@@ -72,10 +98,12 @@ class KingdomBuilding {
         'iconName': iconName,
         'bonusCoins': bonusCoins,
         'bonusXp': bonusXp,
+        'maxLevel': maxLevel,
+        'level': level,
         'isBuilt': isBuilt,
       };
 
-  KingdomBuilding copyWith({bool? isBuilt}) {
+  KingdomBuilding copyWith({bool? isBuilt, int? level}) {
     return KingdomBuilding(
       id: id,
       name: name,
@@ -85,6 +113,8 @@ class KingdomBuilding {
       iconName: iconName,
       bonusCoins: bonusCoins,
       bonusXp: bonusXp,
+      maxLevel: maxLevel,
+      level: level ?? this.level,
       isBuilt: isBuilt ?? this.isBuilt,
     );
   }

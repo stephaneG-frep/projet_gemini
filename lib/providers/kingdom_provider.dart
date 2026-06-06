@@ -16,8 +16,8 @@ class KingdomBonus {
 final kingdomBonusProvider = Provider<KingdomBonus>((ref) {
   final buildings = ref.watch(kingdomProvider);
   return KingdomBonus(
-    xp: buildings.where((building) => building.isBuilt).fold(0, (total, building) => total + building.bonusXp),
-    coins: buildings.where((building) => building.isBuilt).fold(0, (total, building) => total + building.bonusCoins),
+    xp: buildings.where((building) => building.isBuilt).fold(0, (total, building) => total + building.currentBonusXp),
+    coins: buildings.where((building) => building.isBuilt).fold(0, (total, building) => total + building.currentBonusCoins),
   );
 });
 
@@ -34,6 +34,8 @@ class KingdomNotifier extends Notifier<List<KingdomBuilding>> {
       iconName: 'home',
       bonusCoins: 0,
       bonusXp: 0,
+      maxLevel: 3,
+      level: 1,
       isBuilt: true,
     ),
     KingdomBuilding(
@@ -45,6 +47,7 @@ class KingdomNotifier extends Notifier<List<KingdomBuilding>> {
       iconName: 'desk',
       bonusCoins: 1,
       bonusXp: 0,
+      maxLevel: 3,
     ),
     KingdomBuilding(
       id: 'library',
@@ -55,6 +58,7 @@ class KingdomNotifier extends Notifier<List<KingdomBuilding>> {
       iconName: 'library',
       bonusCoins: 0,
       bonusXp: 5,
+      maxLevel: 3,
     ),
     KingdomBuilding(
       id: 'garden',
@@ -65,6 +69,7 @@ class KingdomNotifier extends Notifier<List<KingdomBuilding>> {
       iconName: 'garden',
       bonusCoins: 2,
       bonusXp: 0,
+      maxLevel: 3,
     ),
     KingdomBuilding(
       id: 'pomodoro_workshop',
@@ -75,6 +80,7 @@ class KingdomNotifier extends Notifier<List<KingdomBuilding>> {
       iconName: 'workshop',
       bonusCoins: 2,
       bonusXp: 5,
+      maxLevel: 3,
     ),
     KingdomBuilding(
       id: 'habit_guild',
@@ -85,6 +91,7 @@ class KingdomNotifier extends Notifier<List<KingdomBuilding>> {
       iconName: 'guild',
       bonusCoins: 3,
       bonusXp: 8,
+      maxLevel: 3,
     ),
     KingdomBuilding(
       id: 'focus_tower',
@@ -95,6 +102,7 @@ class KingdomNotifier extends Notifier<List<KingdomBuilding>> {
       iconName: 'tower',
       bonusCoins: 5,
       bonusXp: 12,
+      maxLevel: 3,
     ),
   ];
 
@@ -122,11 +130,37 @@ class KingdomNotifier extends Notifier<List<KingdomBuilding>> {
     }
 
     final updated = [...state];
-    updated[index] = building.copyWith(isBuilt: true);
+    updated[index] = building.copyWith(isBuilt: true, level: 1);
     state = updated;
     await _storage.saveKingdomBuildings(state);
     return BuildResult.built;
   }
+
+  Future<BuildResult> upgradeBuilding(String id) async {
+    final index = state.indexWhere((building) => building.id == id);
+    if (index == -1) {
+      return BuildResult.notFound;
+    }
+
+    final building = state[index];
+    if (!building.isBuilt) {
+      return BuildResult.notBuilt;
+    }
+    if (!building.canUpgrade) {
+      return BuildResult.maxLevel;
+    }
+
+    final paid = await ref.read(playerProvider.notifier).spendCoins(building.upgradeCost);
+    if (!paid) {
+      return BuildResult.notEnoughCoins;
+    }
+
+    final updated = [...state];
+    updated[index] = building.copyWith(level: building.level + 1);
+    state = updated;
+    await _storage.saveKingdomBuildings(state);
+    return BuildResult.upgraded;
+  }
 }
 
-enum BuildResult { built, alreadyBuilt, levelTooLow, notEnoughCoins, notFound }
+enum BuildResult { built, upgraded, alreadyBuilt, notBuilt, maxLevel, levelTooLow, notEnoughCoins, notFound }

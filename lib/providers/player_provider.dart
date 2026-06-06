@@ -78,4 +78,31 @@ class PlayerNotifier extends Notifier<Player> {
     await _storage.savePlayer(state);
     return true;
   }
+
+  Future<void> grantReward({int xp = 0, int coins = 0}) async {
+    var newXp = state.xp + xp;
+    var level = state.level;
+    var maxHp = state.maxHp;
+    var hp = state.hp;
+    var xpToNextLevel = state.xpToNextLevel;
+
+    while (newXp >= xpToNextLevel) {
+      newXp -= xpToNextLevel;
+      level += 1;
+      maxHp += 10;
+      hp = maxHp;
+      xpToNextLevel = (xpToNextLevel * 1.25).round() + 25;
+    }
+
+    state = state.copyWith(
+      level: level,
+      xp: newXp,
+      xpToNextLevel: xpToNextLevel,
+      coins: state.coins + coins,
+      hp: hp,
+      maxHp: maxHp,
+      totalCoinsEarned: state.totalCoinsEarned + coins,
+    );
+    await _storage.savePlayer(state);
+  }
 }

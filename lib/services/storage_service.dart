@@ -2,6 +2,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 import '../models/app_settings.dart';
 import '../models/kingdom_building.dart';
+import '../models/kingdom_goal.dart';
 import '../models/player.dart';
 import '../models/shop_item.dart';
 
@@ -15,6 +16,7 @@ class StorageService {
   static const _shopKey = 'shop_items';
   static const _settingsKey = 'settings';
   static const _kingdomKey = 'kingdom_buildings';
+  static const _kingdomGoalsKey = 'kingdom_goals';
 
   late final Box<dynamic> _box;
 
@@ -83,6 +85,27 @@ class StorageService {
 
   Future<void> saveKingdomBuildings(List<KingdomBuilding> buildings) {
     return _box.put(_kingdomKey, buildings.map((building) => building.toMap()).toList());
+  }
+
+  List<KingdomGoal> loadKingdomGoals(List<KingdomGoal> defaults) {
+    final data = _box.get(_kingdomGoalsKey);
+    if (data is List) {
+      final saved = data.whereType<Map>().map(KingdomGoal.fromMap).toList();
+      return [
+        for (final defaultGoal in defaults)
+          defaultGoal.copyWith(
+            isClaimed: saved
+                .where((goal) => goal.id == defaultGoal.id)
+                .any((goal) => goal.isClaimed),
+          ),
+      ];
+    }
+    saveKingdomGoals(defaults);
+    return defaults;
+  }
+
+  Future<void> saveKingdomGoals(List<KingdomGoal> goals) {
+    return _box.put(_kingdomGoalsKey, goals.map((goal) => goal.toMap()).toList());
   }
 
   AppSettings loadSettings() {

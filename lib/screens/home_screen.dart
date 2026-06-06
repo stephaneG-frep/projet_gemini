@@ -172,41 +172,51 @@ class _KingdomPreview extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               SizedBox(
-                height: 92,
+                height: 118,
                 child: Stack(
                   children: [
                     Positioned.fill(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(18),
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: isDark
-                                ? const [Color(0xFF243B63), Color(0xFF17243A)]
-                                : const [Color(0xFFBEE3FF), Color(0xFFEAF8D8)],
-                          ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(18),
+                        child: Stack(
+                          children: [
+                            Positioned.fill(
+                              child: Image.asset(
+                                'assets/images/kingdom_background.png',
+                                fit: BoxFit.cover,
+                                filterQuality: FilterQuality.high,
+                              ),
+                            ),
+                            if (isDark)
+                              Positioned.fill(
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF0F1624).withValues(alpha: 0.22),
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                     ),
                     Positioned(
                       left: 14,
-                      bottom: 14,
+                      bottom: 18,
                       child: _TinyKingdomIcon(icon: Icons.cottage_rounded, active: builtCount >= 1),
                     ),
                     Positioned(
-                      left: 72,
-                      bottom: 24,
+                      left: 76,
+                      bottom: 32,
                       child: _TinyKingdomIcon(icon: Icons.desktop_windows_rounded, active: builtCount >= 2),
                     ),
                     Positioned(
                       right: 78,
-                      bottom: 18,
+                      bottom: 30,
                       child: _TinyKingdomIcon(icon: Icons.local_library_rounded, active: builtCount >= 3),
                     ),
                     Positioned(
                       right: 18,
-                      bottom: 28,
+                      bottom: 42,
                       child: _TinyKingdomIcon(icon: Icons.castle_rounded, active: builtCount >= totalCount),
                     ),
                   ],
