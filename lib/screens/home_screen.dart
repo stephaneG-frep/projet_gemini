@@ -8,6 +8,7 @@ import '../providers/kingdom_provider.dart';
 import '../providers/settings_provider.dart';
 import '../providers/shop_provider.dart';
 import '../widgets/player_card.dart';
+import '../widgets/reward_chip.dart';
 import '../widgets/rpg_button.dart';
 import 'guide_screen.dart';
 import 'kingdom_screen.dart';
@@ -25,8 +26,12 @@ class HomeScreen extends ConsumerWidget {
     final player = ref.watch(playerProvider);
     final settings = ref.watch(settingsProvider);
     final kingdom = ref.watch(kingdomProvider);
-    final pendingBuildings = kingdom.where((building) => !building.isBuilt).toList(growable: false);
-    final equippedItems = ref.watch(shopProvider).where((item) => item.isEquipped);
+    final pendingBuildings = kingdom
+        .where((building) => !building.isBuilt)
+        .toList(growable: false);
+    final equippedItems = ref
+        .watch(shopProvider)
+        .where((item) => item.isEquipped);
     final equippedItem = equippedItems.isEmpty ? null : equippedItems.first;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -37,17 +42,20 @@ class HomeScreen extends ConsumerWidget {
           IconButton(
             tooltip: "Mode d'emploi",
             icon: const Icon(Icons.help_outline_rounded),
-            onPressed: () => Navigator.pushNamed(context, GuideScreen.routeName),
+            onPressed: () =>
+                Navigator.pushNamed(context, GuideScreen.routeName),
           ),
           IconButton(
             tooltip: 'Royaume',
             icon: const Icon(Icons.castle_rounded),
-            onPressed: () => Navigator.pushNamed(context, KingdomScreen.routeName),
+            onPressed: () =>
+                Navigator.pushNamed(context, KingdomScreen.routeName),
           ),
           IconButton(
             tooltip: 'Statistiques',
             icon: const Icon(Icons.bar_chart_rounded),
-            onPressed: () => Navigator.pushNamed(context, StatsScreen.routeName),
+            onPressed: () =>
+                Navigator.pushNamed(context, StatsScreen.routeName),
           ),
           IconButton(
             tooltip: 'Boutique',
@@ -63,8 +71,16 @@ class HomeScreen extends ConsumerWidget {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: isDark
-                  ? const [Color(0xFF101A2B), Color(0xFF16253C), Color(0xFF0F1624)]
-                  : const [Color(0xFFF4F8FF), Color(0xFFFFF7EA), Color(0xFFF8F2E8)],
+                  ? const [
+                      Color(0xFF101A2B),
+                      Color(0xFF16253C),
+                      Color(0xFF0F1624),
+                    ]
+                  : const [
+                      Color(0xFFF4F8FF),
+                      Color(0xFFFFF7EA),
+                      Color(0xFFF8F2E8),
+                    ],
             ),
           ),
           child: ListView(
@@ -72,7 +88,9 @@ class HomeScreen extends ConsumerWidget {
             children: [
               Text(
                 'Pret pour une quete de 25 minutes ?',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900),
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w900,
+                ),
               ),
               const SizedBox(height: 6),
               Text(
@@ -83,17 +101,24 @@ class HomeScreen extends ConsumerWidget {
               PlayerCard(player: player, equippedItem: equippedItem),
               const SizedBox(height: 18),
               _KingdomPreview(
-                builtCount: kingdom.where((building) => building.isBuilt).length,
+                builtCount: kingdom
+                    .where((building) => building.isBuilt)
+                    .length,
                 totalCount: kingdom.length,
-                nextBuilding: pendingBuildings.isEmpty ? null : pendingBuildings.first,
+                nextBuilding: pendingBuildings.isEmpty
+                    ? null
+                    : pendingBuildings.first,
               ),
               const SizedBox(height: 18),
               const _DailyQuestPanel(),
               const SizedBox(height: 20),
               RpgButton(
-                label: settings.devModeEnabled ? 'Session test ${settings.devTimerSeconds}s' : 'Commencer une session',
+                label: settings.devModeEnabled
+                    ? 'Session test ${settings.devTimerSeconds}s'
+                    : 'Commencer une session',
                 icon: Icons.play_arrow_rounded,
-                onPressed: () => Navigator.pushNamed(context, PomodoroScreen.routeName),
+                onPressed: () =>
+                    Navigator.pushNamed(context, PomodoroScreen.routeName),
               ),
               const SizedBox(height: 14),
               _OptionsPanel(
@@ -148,12 +173,17 @@ class _DailyQuestPanel extends ConsumerWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.today_rounded, color: Theme.of(context).colorScheme.secondary),
+                Icon(
+                  Icons.today_rounded,
+                  color: Theme.of(context).colorScheme.secondary,
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     'Quetes du jour',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                 ),
                 if (readyCount > 0)
@@ -193,27 +223,59 @@ class _DailyQuestRow extends ConsumerWidget {
                 backgroundColor: progress.canClaim
                     ? Theme.of(context).colorScheme.secondaryContainer
                     : Theme.of(context).colorScheme.primaryContainer,
-                child: Icon(progress.canClaim ? Icons.redeem_rounded : quest.icon, size: 20),
+                child: Icon(
+                  progress.canClaim ? Icons.redeem_rounded : quest.icon,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(quest.title, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900)),
+                    Text(
+                      quest.title,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
                     const SizedBox(height: 3),
-                    Text(quest.description, style: Theme.of(context).textTheme.bodySmall),
+                    Text(
+                      quest.description,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
                     const SizedBox(height: 7),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(999),
                       child: LinearProgressIndicator(
                         value: progress.percent,
                         minHeight: 8,
-                        backgroundColor: Theme.of(context).dividerColor.withValues(alpha: 0.25),
+                        backgroundColor: Theme.of(
+                          context,
+                        ).dividerColor.withValues(alpha: 0.25),
                       ),
                     ),
                     const SizedBox(height: 5),
-                    Text('${progress.cappedCurrent}/${quest.target} - ${quest.rewardLabel}', style: Theme.of(context).textTheme.labelMedium),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        _ProgressPill(
+                          label: '${progress.cappedCurrent}/${quest.target}',
+                        ),
+                        if (quest.rewardXp > 0)
+                          RewardChip.xp(
+                            label: '+${quest.rewardXp} XP',
+                            compact: true,
+                          ),
+                        if (quest.rewardCoins > 0)
+                          RewardChip.coins(
+                            label: '+${quest.rewardCoins} pieces',
+                            compact: true,
+                          ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -221,12 +283,18 @@ class _DailyQuestRow extends ConsumerWidget {
               FilledButton.tonal(
                 onPressed: progress.canClaim
                     ? () async {
-                        final result = await ref.read(dailyQuestProvider.notifier).claim(quest.id);
+                        final result = await ref
+                            .read(dailyQuestProvider.notifier)
+                            .claim(quest.id);
                         if (!context.mounted) {
                           return;
                         }
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(_messageFor(result, quest.rewardLabel))),
+                          SnackBar(
+                            content: Text(
+                              _messageFor(result, quest.rewardLabel),
+                            ),
+                          ),
                         );
                       }
                     : null,
@@ -245,6 +313,44 @@ class _DailyQuestRow extends ConsumerWidget {
       ClaimDailyQuestResult.alreadyClaimed => 'Recompense deja reclamee.',
       ClaimDailyQuestResult.notComplete => 'Quete pas encore terminee.',
     };
+  }
+}
+
+class _ProgressPill extends StatelessWidget {
+  const _ProgressPill({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF243552) : const Color(0xFFF2F6FF),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.flag_rounded,
+              size: 14,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: Theme.of(
+                context,
+              ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w800),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -277,16 +383,22 @@ class _KingdomPreview extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.castle_rounded, color: Theme.of(context).colorScheme.secondary),
+                  Icon(
+                    Icons.castle_rounded,
+                    color: Theme.of(context).colorScheme.secondary,
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       'Mon royaume',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                   ),
                   FilledButton.tonalIcon(
-                    onPressed: () => Navigator.pushNamed(context, KingdomScreen.routeName),
+                    onPressed: () =>
+                        Navigator.pushNamed(context, KingdomScreen.routeName),
                     icon: const Icon(Icons.visibility_rounded),
                     label: const Text('Voir'),
                   ),
@@ -313,7 +425,9 @@ class _KingdomPreview extends StatelessWidget {
                               Positioned.fill(
                                 child: DecoratedBox(
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF0F1624).withValues(alpha: 0.22),
+                                    color: const Color(
+                                      0xFF0F1624,
+                                    ).withValues(alpha: 0.22),
                                   ),
                                 ),
                               ),
@@ -324,22 +438,34 @@ class _KingdomPreview extends StatelessWidget {
                     Positioned(
                       left: 14,
                       bottom: 18,
-                      child: _TinyKingdomIcon(icon: Icons.cottage_rounded, active: builtCount >= 1),
+                      child: _TinyKingdomIcon(
+                        icon: Icons.cottage_rounded,
+                        active: builtCount >= 1,
+                      ),
                     ),
                     Positioned(
                       left: 76,
                       bottom: 32,
-                      child: _TinyKingdomIcon(icon: Icons.desktop_windows_rounded, active: builtCount >= 2),
+                      child: _TinyKingdomIcon(
+                        icon: Icons.desktop_windows_rounded,
+                        active: builtCount >= 2,
+                      ),
                     ),
                     Positioned(
                       right: 78,
                       bottom: 30,
-                      child: _TinyKingdomIcon(icon: Icons.local_library_rounded, active: builtCount >= 3),
+                      child: _TinyKingdomIcon(
+                        icon: Icons.local_library_rounded,
+                        active: builtCount >= 3,
+                      ),
                     ),
                     Positioned(
                       right: 18,
                       bottom: 42,
-                      child: _TinyKingdomIcon(icon: Icons.castle_rounded, active: builtCount >= totalCount),
+                      child: _TinyKingdomIcon(
+                        icon: Icons.castle_rounded,
+                        active: builtCount >= totalCount,
+                      ),
                     ),
                   ],
                 ),
@@ -369,14 +495,18 @@ class _TinyKingdomIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: active ? Theme.of(context).colorScheme.surface : Theme.of(context).disabledColor.withValues(alpha: 0.20),
+        color: active
+            ? Theme.of(context).colorScheme.surface
+            : Theme.of(context).disabledColor.withValues(alpha: 0.20),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Padding(
         padding: const EdgeInsets.all(8),
         child: Icon(
           active ? icon : Icons.lock_rounded,
-          color: active ? Theme.of(context).colorScheme.primary : Theme.of(context).disabledColor,
+          color: active
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).disabledColor,
           size: 24,
         ),
       ),
@@ -403,7 +533,9 @@ class _OptionsPanel extends ConsumerWidget {
       color: isDark ? const Color(0xFF182235) : const Color(0xFFFFFAF0),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: isDark ? const Color(0xFF314971) : const Color(0xFFFFD79A)),
+        side: BorderSide(
+          color: isDark ? const Color(0xFF314971) : const Color(0xFFFFD79A),
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -413,7 +545,9 @@ class _OptionsPanel extends ConsumerWidget {
               contentPadding: EdgeInsets.zero,
               secondary: const Icon(Icons.dark_mode_rounded),
               title: const Text('Theme sombre'),
-              subtitle: const Text('Une ambiance nuit plus calme pour les sessions du soir.'),
+              subtitle: const Text(
+                'Une ambiance nuit plus calme pour les sessions du soir.',
+              ),
               value: darkEnabled,
               onChanged: ref.read(settingsProvider.notifier).setDarkMode,
             ),
@@ -422,7 +556,11 @@ class _OptionsPanel extends ConsumerWidget {
               contentPadding: EdgeInsets.zero,
               secondary: const Icon(Icons.speed_rounded),
               title: const Text('Mode dev'),
-              subtitle: Text(devEnabled ? 'Sessions rapides pour tester les recompenses.' : 'Pomodoro classique de 25 minutes.'),
+              subtitle: Text(
+                devEnabled
+                    ? 'Sessions rapides pour tester les recompenses.'
+                    : 'Pomodoro classique de 25 minutes.',
+              ),
               value: devEnabled,
               onChanged: ref.read(settingsProvider.notifier).setDevMode,
             ),
@@ -440,7 +578,9 @@ class _OptionsPanel extends ConsumerWidget {
                       divisions: 11,
                       label: '${devSeconds}s',
                       onChanged: (value) {
-                        ref.read(settingsProvider.notifier).setDevTimerSeconds(value.round());
+                        ref
+                            .read(settingsProvider.notifier)
+                            .setDevTimerSeconds(value.round());
                       },
                     ),
                   ),
@@ -459,7 +599,11 @@ class _OptionsPanel extends ConsumerWidget {
 }
 
 class _QuickCard extends StatelessWidget {
-  const _QuickCard({required this.icon, required this.value, required this.label});
+  const _QuickCard({
+    required this.icon,
+    required this.value,
+    required this.label,
+  });
 
   final IconData icon;
   final String value;
@@ -475,7 +619,12 @@ class _QuickCard extends StatelessWidget {
           children: [
             Icon(icon, color: Theme.of(context).colorScheme.primary),
             const SizedBox(height: 10),
-            Text(value, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+            Text(
+              value,
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+            ),
             Text(label, style: Theme.of(context).textTheme.bodyMedium),
           ],
         ),

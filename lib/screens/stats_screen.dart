@@ -18,12 +18,36 @@ class StatsScreen extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            _StatTile(icon: Icons.schedule, label: 'Temps total de concentration', value: '${player.totalFocusMinutes} min'),
-            _StatTile(icon: Icons.check_circle, label: 'Sessions reussies', value: '${player.completedSessions}'),
-            _StatTile(icon: Icons.cancel, label: 'Sessions echouees', value: '${player.failedSessions}'),
-            _StatTile(icon: Icons.local_fire_department, label: 'Meilleure serie', value: '${player.bestStreak}'),
-            _StatTile(icon: Icons.military_tech, label: 'Niveau actuel', value: '${player.level}'),
-            _StatTile(icon: Icons.toll, label: 'Pieces gagnees', value: '${player.totalCoinsEarned}'),
+            _StatTile(
+              icon: Icons.schedule,
+              label: 'Temps total de concentration',
+              value: '${player.totalFocusMinutes} min',
+            ),
+            _StatTile(
+              icon: Icons.check_circle,
+              label: 'Sessions reussies',
+              value: '${player.completedSessions}',
+            ),
+            _StatTile(
+              icon: Icons.cancel,
+              label: 'Sessions echouees',
+              value: '${player.failedSessions}',
+            ),
+            _StatTile(
+              icon: Icons.local_fire_department,
+              label: 'Meilleure serie',
+              value: '${player.bestStreak}',
+            ),
+            _StatTile(
+              icon: Icons.military_tech,
+              label: 'Niveau actuel',
+              value: '${player.level}',
+            ),
+            _StatTile(
+              icon: Icons.paid_rounded,
+              label: 'Pieces gagnees',
+              value: '${player.totalCoinsEarned}',
+            ),
           ],
         ),
       ),
@@ -32,7 +56,11 @@ class StatsScreen extends ConsumerWidget {
 }
 
 class _StatTile extends StatelessWidget {
-  const _StatTile({required this.icon, required this.label, required this.value});
+  const _StatTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
 
   final IconData icon;
   final String label;
@@ -48,7 +76,12 @@ class _StatTile extends StatelessWidget {
           child: Icon(icon, color: Theme.of(context).colorScheme.primary),
         ),
         title: Text(label),
-        trailing: Text(value, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+        trailing: Text(
+          value,
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+        ),
       ),
     );
   }
