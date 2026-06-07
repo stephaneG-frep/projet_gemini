@@ -8,6 +8,7 @@ import 'screens/kingdom_screen.dart';
 import 'screens/pomodoro_screen.dart';
 import 'screens/reward_screen.dart';
 import 'screens/shop_screen.dart';
+import 'screens/startup_intro_screen.dart';
 import 'screens/stats_screen.dart';
 
 class FocusBuddyApp extends ConsumerWidget {
@@ -31,8 +32,9 @@ class FocusBuddyApp extends ConsumerWidget {
         RewardScreen.routeName: (_) => const RewardScreen(),
         GuideScreen.routeName: (_) => const GuideScreen(),
         KingdomScreen.routeName: (_) => const KingdomScreen(),
+        StartupIntroScreen.routeName: (_) => const StartupIntroScreen(),
       },
-      initialRoute: HomeScreen.routeName,
+      initialRoute: StartupIntroScreen.routeName,
     );
   }
 

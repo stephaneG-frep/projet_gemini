@@ -1,6 +1,7 @@
 import 'package:hive_flutter/hive_flutter.dart';
 
 import '../models/app_settings.dart';
+import '../models/daily_quest.dart';
 import '../models/kingdom_building.dart';
 import '../models/kingdom_goal.dart';
 import '../models/player.dart';
@@ -17,6 +18,7 @@ class StorageService {
   static const _settingsKey = 'settings';
   static const _kingdomKey = 'kingdom_buildings';
   static const _kingdomGoalsKey = 'kingdom_goals';
+  static const _dailyQuestStateKey = 'daily_quest_state';
 
   late final Box<dynamic> _box;
 
@@ -106,6 +108,18 @@ class StorageService {
 
   Future<void> saveKingdomGoals(List<KingdomGoal> goals) {
     return _box.put(_kingdomGoalsKey, goals.map((goal) => goal.toMap()).toList());
+  }
+
+  DailyQuestState? loadDailyQuestState() {
+    final data = _box.get(_dailyQuestStateKey);
+    if (data is Map) {
+      return DailyQuestState.fromMap(data);
+    }
+    return null;
+  }
+
+  Future<void> saveDailyQuestState(DailyQuestState state) {
+    return _box.put(_dailyQuestStateKey, state.toMap());
   }
 
   AppSettings loadSettings() {

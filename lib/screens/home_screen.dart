@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/kingdom_building.dart';
+import '../providers/daily_quest_provider.dart';
 import '../providers/player_provider.dart';
 import '../providers/kingdom_provider.dart';
 import '../providers/settings_provider.dart';
@@ -86,6 +87,8 @@ class HomeScreen extends ConsumerWidget {
                 totalCount: kingdom.length,
                 nextBuilding: pendingBuildings.isEmpty ? null : pendingBuildings.first,
               ),
+              const SizedBox(height: 18),
+              const _DailyQuestPanel(),
               const SizedBox(height: 20),
               RpgButton(
                 label: settings.devModeEnabled ? 'Session test ${settings.devTimerSeconds}s' : 'Commencer une session',
@@ -123,6 +126,125 @@ class HomeScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+}
+
+class _DailyQuestPanel extends ConsumerWidget {
+  const _DailyQuestPanel();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final quests = ref.watch(dailyQuestProgressProvider);
+    final readyCount = quests.where((quest) => quest.canClaim).length;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Material(
+      color: isDark ? const Color(0xFF182235) : Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.today_rounded, color: Theme.of(context).colorScheme.secondary),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Quetes du jour',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+                  ),
+                ),
+                if (readyCount > 0)
+                  Badge(
+                    label: Text('$readyCount'),
+                    child: const Icon(Icons.card_giftcard_rounded),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            ...quests.map((progress) => _DailyQuestRow(progress: progress)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DailyQuestRow extends ConsumerWidget {
+  const _DailyQuestRow({required this.progress});
+
+  final DailyQuestProgress progress;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final quest = progress.quest;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CircleAvatar(
+                radius: 20,
+                backgroundColor: progress.canClaim
+                    ? Theme.of(context).colorScheme.secondaryContainer
+                    : Theme.of(context).colorScheme.primaryContainer,
+                child: Icon(progress.canClaim ? Icons.redeem_rounded : quest.icon, size: 20),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(quest.title, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900)),
+                    const SizedBox(height: 3),
+                    Text(quest.description, style: Theme.of(context).textTheme.bodySmall),
+                    const SizedBox(height: 7),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(999),
+                      child: LinearProgressIndicator(
+                        value: progress.percent,
+                        minHeight: 8,
+                        backgroundColor: Theme.of(context).dividerColor.withValues(alpha: 0.25),
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text('${progress.cappedCurrent}/${quest.target} - ${quest.rewardLabel}', style: Theme.of(context).textTheme.labelMedium),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              FilledButton.tonal(
+                onPressed: progress.canClaim
+                    ? () async {
+                        final result = await ref.read(dailyQuestProvider.notifier).claim(quest.id);
+                        if (!context.mounted) {
+                          return;
+                        }
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(_messageFor(result, quest.rewardLabel))),
+                        );
+                      }
+                    : null,
+                child: Text(progress.isClaimed ? 'OK' : 'Gain'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _messageFor(ClaimDailyQuestResult result, String reward) {
+    return switch (result) {
+      ClaimDailyQuestResult.claimed => 'Quete du jour validee : $reward !',
+      ClaimDailyQuestResult.alreadyClaimed => 'Recompense deja reclamee.',
+      ClaimDailyQuestResult.notComplete => 'Quete pas encore terminee.',
+    };
   }
 }
 

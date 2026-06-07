@@ -73,18 +73,24 @@ class GuideScreen extends StatelessWidget {
               ),
               const _GuideStep(
                 number: '7',
+                icon: Icons.today_rounded,
+                title: 'Fais les quetes du jour',
+                body: 'Chaque jour, l accueil propose 3 petites quetes. Termine-les puis reclame les recompenses. Elles se reinitialisent automatiquement le jour suivant.',
+              ),
+              const _GuideStep(
+                number: '8',
                 icon: Icons.flag_rounded,
                 title: 'Suis les objectifs',
                 body: 'Dans le royaume, les objectifs te donnent une direction : construire plusieurs batiments, ameliorer le royaume ou terminer des sessions. Quand un objectif est fini, reclame sa recompense.',
               ),
               const _GuideStep(
-                number: '8',
+                number: '9',
                 icon: Icons.storefront_rounded,
                 title: 'Achete et equipe',
                 body: 'La boutique contient des cosmetiques pour ton personnage. Les pieces servent donc a deux choses : embellir ton heros et developper ton royaume.',
               ),
               const _GuideStep(
-                number: '9',
+                number: '10',
                 icon: Icons.speed_rounded,
                 title: 'Teste avec le mode dev',
                 body: 'Active le mode dev sur l accueil pour raccourcir le timer entre 5 et 60 secondes et tester les recompenses rapidement.',
@@ -177,6 +183,11 @@ class _KingdomHelpCard extends StatelessWidget {
                   icon: Icons.flag_rounded,
                   label: 'Objectifs = recompenses',
                   color: isDark ? const Color(0xFF243552) : const Color(0xFFF2F6FF),
+                ),
+                _GuideTag(
+                  icon: Icons.today_rounded,
+                  label: 'Quetes du jour = retour quotidien',
+                  color: isDark ? const Color(0xFF243552) : const Color(0xFFEAF3FF),
                 ),
               ],
             ),

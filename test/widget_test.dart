@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:focus_buddy/app.dart';
@@ -18,7 +19,16 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
 
     expect(find.text('FocusBuddy'), findsOneWidget);
-    await tester.scrollUntilVisible(find.text('Commencer une session'), 160);
+    expect(find.text('Une app pour retrouver l elan'), findsOneWidget);
+    await tester.tap(find.widgetWithText(TextButton, 'Passer'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+
+    await tester.scrollUntilVisible(
+      find.text('Commencer une session'),
+      160,
+      scrollable: find.byType(Scrollable).last,
+    );
     expect(find.text('Commencer une session'), findsOneWidget);
   });
 }
