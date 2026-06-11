@@ -305,23 +305,24 @@ class _KingdomMap extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    const positions = [
+      Offset(0.27, 0.39),
+      Offset(0.20, 0.60),
+      Offset(0.43, 0.72),
+      Offset(0.62, 0.39),
+      Offset(0.79, 0.72),
+      Offset(0.84, 0.53),
+      Offset(0.67, 0.19),
+    ];
+
     return Card(
+      elevation: 0,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
         child: SizedBox(
-          height: 300,
+          height: 360,
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final positions = [
-                const Offset(0.27, 0.39),
-                const Offset(0.20, 0.60),
-                const Offset(0.43, 0.72),
-                const Offset(0.62, 0.39),
-                const Offset(0.79, 0.72),
-                const Offset(0.84, 0.53),
-                const Offset(0.67, 0.19),
-              ];
-
               return Stack(
                 children: [
                   Positioned.fill(
@@ -341,6 +342,29 @@ class _KingdomMap extends StatelessWidget {
                         ),
                       ),
                     ),
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            (isDark ? const Color(0xFF0F1624) : Colors.white)
+                                .withValues(alpha: isDark ? 0.26 : 0.12),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned.fill(
+                    child: CustomPaint(
+                      painter: _KingdomRoadPainter(
+                        points: positions,
+                        dark: isDark,
+                      ),
+                    ),
+                  ),
                   Positioned(
                     left: 12,
                     top: 12,
@@ -375,10 +399,18 @@ class _KingdomMap extends StatelessWidget {
                       ),
                     ),
                   ),
+                  const Positioned(
+                    left: 16,
+                    bottom: 16,
+                    child: _MapLegend(
+                      icon: Icons.account_tree_rounded,
+                      label: 'Chemins du royaume',
+                    ),
+                  ),
                   for (var index = 0; index < buildings.length; index++)
                     Positioned(
-                      left: constraints.maxWidth * positions[index].dx - 28,
-                      top: constraints.maxHeight * positions[index].dy - 28,
+                      left: constraints.maxWidth * positions[index].dx - 52,
+                      top: constraints.maxHeight * positions[index].dy - 52,
                       child: _SceneBuilding(building: buildings[index]),
                     ),
                 ],
@@ -391,6 +423,100 @@ class _KingdomMap extends StatelessWidget {
   }
 }
 
+class _MapLegend extends StatelessWidget {
+  const _MapLegend({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.90),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 15, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: Theme.of(
+                context,
+              ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w800),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _KingdomRoadPainter extends CustomPainter {
+  const _KingdomRoadPainter({required this.points, required this.dark});
+
+  final List<Offset> points;
+  final bool dark;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (points.isEmpty) {
+      return;
+    }
+
+    final scaled = points
+        .map((point) => Offset(point.dx * size.width, point.dy * size.height))
+        .toList(growable: false);
+    final road = Paint()
+      ..color = (dark ? const Color(0xFFB8935F) : const Color(0xFFE4C28D))
+          .withValues(alpha: dark ? 0.48 : 0.78)
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..strokeWidth = 13;
+    final highlight = Paint()
+      ..color = (dark ? const Color(0xFFFFE1A8) : const Color(0xFFFFF1C8))
+          .withValues(alpha: dark ? 0.36 : 0.82)
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..strokeWidth = 5;
+
+    void drawCurve(Offset from, Offset to) {
+      final control = Offset(
+        (from.dx + to.dx) / 2,
+        (from.dy + to.dy) / 2 - size.height * 0.06,
+      );
+      final path = Path()
+        ..moveTo(from.dx, from.dy)
+        ..quadraticBezierTo(control.dx, control.dy, to.dx, to.dy);
+      canvas.drawPath(path, road);
+      canvas.drawPath(path, highlight);
+    }
+
+    for (var index = 0; index < scaled.length - 1; index++) {
+      drawCurve(scaled[index], scaled[index + 1]);
+    }
+
+    final plaza = Paint()
+      ..color = (dark ? const Color(0xFF182235) : const Color(0xFFFFF8E7))
+          .withValues(alpha: dark ? 0.72 : 0.86);
+    for (final point in scaled) {
+      canvas.drawCircle(point, 20, plaza);
+      canvas.drawCircle(point, 20, road);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _KingdomRoadPainter oldDelegate) {
+    return oldDelegate.points != points || oldDelegate.dark != dark;
+  }
+}
+
 class _SceneBuilding extends StatelessWidget {
   const _SceneBuilding({required this.building});
 
@@ -399,72 +525,262 @@ class _SceneBuilding extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final activeColor = isDark ? const Color(0xFF182235) : Colors.white;
-    final lockedColor = isDark
-        ? const Color(0xFF182235)
-        : const Color(0xFFFFFBF3);
+    final built = building.isBuilt;
+    final primary = built
+        ? _buildingAccent(building.iconName, isDark)
+        : (isDark ? const Color(0xFF6D7890) : const Color(0xFF9AA5B7));
+    final surface = isDark ? const Color(0xFF182235) : Colors.white;
+    final isMaxLevel = built && building.level >= building.maxLevel;
+    final hasGlow = built && building.level >= 2;
 
     return Tooltip(
       message: building.name,
-      child: SizedBox.square(
-        dimension: 56,
+      child: SizedBox(
+        width: 104,
+        height: 104,
         child: Stack(
           clipBehavior: Clip.none,
           children: [
-            Positioned.fill(
+            Positioned(
+              left: 12,
+              right: 12,
+              bottom: 11,
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: building.isBuilt ? activeColor : lockedColor,
+                  color: Colors.black.withValues(alpha: isDark ? 0.28 : 0.16),
                   borderRadius: BorderRadius.circular(999),
-                  border: Border.all(
-                    color: building.isBuilt
-                        ? Theme.of(context).colorScheme.secondary
-                        : Theme.of(context).disabledColor,
-                    width: building.isBuilt ? 2 : 1,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(
-                        alpha: isDark ? 0.28 : 0.12,
-                      ),
-                      blurRadius: 12,
-                      offset: const Offset(0, 7),
-                    ),
-                  ],
                 ),
-                child: Icon(
-                  building.isBuilt ? building.icon : Icons.lock_rounded,
-                  color: building.isBuilt
-                      ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context).disabledColor,
-                  size: 28,
+                child: const SizedBox(height: 10),
+              ),
+            ),
+            if (hasGlow)
+              Positioned(
+                left: 7,
+                right: 7,
+                top: 3,
+                child: _LevelAura(color: primary, strong: isMaxLevel, size: 88),
+              ),
+            Positioned(
+              left: 4,
+              right: 4,
+              top: 0,
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 240),
+                opacity: built ? 1 : 0.38,
+                child: Image.asset(
+                  building.imageAsset,
+                  height: 82,
+                  fit: BoxFit.contain,
+                  filterQuality: FilterQuality.high,
+                  errorBuilder: (context, error, stackTrace) {
+                    return SizedBox.square(
+                      dimension: 72,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: surface,
+                          borderRadius: BorderRadius.circular(999),
+                          border: Border.all(color: primary),
+                        ),
+                        child: Icon(building.icon, color: primary),
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
-            if (building.isBuilt)
+            if (!built)
               Positioned(
-                right: -2,
-                top: -2,
+                left: 34,
+                top: 26,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.secondary,
+                    color: surface.withValues(alpha: 0.94),
                     borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                      color: Theme.of(
+                        context,
+                      ).disabledColor.withValues(alpha: 0.32),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(6),
+                    child: Icon(
+                      Icons.lock_rounded,
+                      size: 18,
+                      color: Theme.of(context).disabledColor,
+                    ),
+                  ),
+                ),
+              ),
+            if (built)
+              Positioned(
+                right: 8,
+                top: -3,
+                child: _LevelBadge(
+                  level: building.level,
+                  isMaxLevel: isMaxLevel,
+                ),
+              ),
+            if (isMaxLevel)
+              Positioned(
+                left: 10,
+                top: 2,
+                child: Icon(
+                  Icons.workspace_premium_rounded,
+                  size: 20,
+                  color: Theme.of(context).colorScheme.secondary,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black.withValues(alpha: 0.32),
+                      blurRadius: 8,
+                    ),
+                  ],
+                ),
+              ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Center(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: surface.withValues(alpha: 0.94),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                      color: built
+                          ? primary.withValues(alpha: 0.45)
+                          : Theme.of(
+                              context,
+                            ).disabledColor.withValues(alpha: 0.22),
+                    ),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
+                      horizontal: 8,
                       vertical: 3,
                     ),
                     child: Text(
-                      '${building.level}',
+                      _shortName(building.name),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: Colors.black,
                         fontWeight: FontWeight.w900,
+                        color: built ? null : Theme.of(context).disabledColor,
                       ),
                     ),
                   ),
                 ),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Color _buildingAccent(String iconName, bool dark) {
+    return switch (iconName) {
+      'home' => dark ? const Color(0xFF8DD7A5) : const Color(0xFFBDEFC9),
+      'desk' => dark ? const Color(0xFF77B8FF) : const Color(0xFFCBE4FF),
+      'library' => dark ? const Color(0xFFC9A0FF) : const Color(0xFFE7D4FF),
+      'garden' => dark ? const Color(0xFF74D6A0) : const Color(0xFFC9F4D8),
+      'workshop' => dark ? const Color(0xFFFFC46B) : const Color(0xFFFFE0A3),
+      'guild' => dark ? const Color(0xFFFF9FAE) : const Color(0xFFFFD4DC),
+      'tower' => dark ? const Color(0xFF9ED9FF) : const Color(0xFFD4F0FF),
+      _ => dark ? const Color(0xFF88A8FF) : const Color(0xFFDDE6FF),
+    };
+  }
+
+  String _shortName(String name) {
+    return switch (building.id) {
+      'focus_camp' => 'Camp',
+      'quiet_office' => 'Bureau',
+      'library' => 'Biblio',
+      'garden' => 'Jardin',
+      'pomodoro_workshop' => 'Atelier',
+      'habit_guild' => 'Guilde',
+      'focus_tower' => 'Tour',
+      _ => name,
+    };
+  }
+}
+
+class _LevelAura extends StatelessWidget {
+  const _LevelAura({
+    required this.color,
+    required this.strong,
+    required this.size,
+  });
+
+  final Color color;
+  final bool strong;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: SizedBox.square(
+        dimension: size,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: RadialGradient(
+              colors: [
+                color.withValues(alpha: strong ? 0.38 : 0.25),
+                color.withValues(alpha: strong ? 0.18 : 0.10),
+                Colors.transparent,
+              ],
+              stops: const [0.0, 0.54, 1.0],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LevelBadge extends StatelessWidget {
+  const _LevelBadge({required this.level, required this.isMaxLevel});
+
+  final int level;
+  final bool isMaxLevel;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: isMaxLevel
+            ? const LinearGradient(
+                colors: [Color(0xFFFFE08A), Color(0xFFFFA936)],
+              )
+            : null,
+        color: isMaxLevel ? null : Theme.of(context).colorScheme.secondary,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.72)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.18),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isMaxLevel) ...[
+              const Icon(Icons.star_rounded, size: 12, color: Colors.black),
+              const SizedBox(width: 2),
+            ],
+            Text(
+              '$level',
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: Colors.black,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
           ],
         ),
       ),
@@ -489,6 +805,7 @@ class _BuildingCard extends ConsumerWidget {
     final lockedByLevel = player.level < building.requiredLevel;
 
     return Card(
+      elevation: 0,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -497,15 +814,7 @@ class _BuildingCard extends ConsumerWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CircleAvatar(
-                  radius: 28,
-                  backgroundColor: building.isBuilt
-                      ? Theme.of(context).colorScheme.tertiaryContainer
-                      : Theme.of(context).colorScheme.primaryContainer,
-                  child: Icon(
-                    building.isBuilt ? building.icon : Icons.lock_open_rounded,
-                  ),
-                ),
+                _BuildingAvatar(building: building),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(
@@ -518,6 +827,16 @@ class _BuildingCard extends ConsumerWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(building.description),
+                      const SizedBox(height: 10),
+                      _LevelTrack(
+                        level: building.level,
+                        maxLevel: building.maxLevel,
+                        isBuilt: building.isBuilt,
+                      ),
+                      if (building.isBuilt) ...[
+                        const SizedBox(height: 8),
+                        _BuildingStageLabel(building: building),
+                      ],
                     ],
                   ),
                 ),
@@ -529,7 +848,7 @@ class _BuildingCard extends ConsumerWidget {
               runSpacing: 8,
               children: [
                 _SummaryPill(
-                  icon: Icons.toll_rounded,
+                  icon: Icons.paid_rounded,
                   label: building.cost == 0
                       ? 'Gratuit'
                       : '${building.cost} pieces',
@@ -646,6 +965,179 @@ class _BuildingCard extends ConsumerWidget {
       BuildResult.notEnoughCoins => 'Pas assez de pieces.',
       BuildResult.notFound => 'Batiment introuvable.',
     };
+  }
+}
+
+class _BuildingAvatar extends StatelessWidget {
+  const _BuildingAvatar({required this.building});
+
+  final KingdomBuilding building;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final built = building.isBuilt;
+    final isMaxLevel = built && building.level >= building.maxLevel;
+    final hasGlow = built && building.level >= 2;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: built
+              ? Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.50)
+              : Theme.of(context).dividerColor.withValues(alpha: 0.40),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.24 : 0.08),
+            blurRadius: 14,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: SizedBox.square(
+        dimension: 64,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            if (hasGlow)
+              _LevelAura(
+                color: Theme.of(context).colorScheme.secondary,
+                strong: isMaxLevel,
+                size: 58,
+              ),
+            Opacity(
+              opacity: built ? 1 : 0.42,
+              child: Padding(
+                padding: const EdgeInsets.all(5),
+                child: Image.asset(
+                  building.imageAsset,
+                  fit: BoxFit.contain,
+                  filterQuality: FilterQuality.high,
+                ),
+              ),
+            ),
+            if (!built)
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.surface.withValues(alpha: 0.86),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(5),
+                  child: Icon(
+                    Icons.lock_open_rounded,
+                    color: Theme.of(context).disabledColor,
+                    size: 18,
+                  ),
+                ),
+              ),
+            if (isMaxLevel)
+              Positioned(
+                right: 4,
+                top: 4,
+                child: Icon(
+                  Icons.star_rounded,
+                  size: 18,
+                  color: Theme.of(context).colorScheme.secondary,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black.withValues(alpha: 0.22),
+                      blurRadius: 6,
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _BuildingStageLabel extends StatelessWidget {
+  const _BuildingStageLabel({required this.building});
+
+  final KingdomBuilding building;
+
+  @override
+  Widget build(BuildContext context) {
+    final (icon, label) = switch (building.level) {
+      >= 3 => (Icons.workspace_premium_rounded, 'Batiment majeur'),
+      2 => (Icons.auto_awesome_rounded, 'Batiment renforce'),
+      _ => (Icons.foundation_rounded, 'Base construite'),
+    };
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 15, color: Theme.of(context).colorScheme.secondary),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+            color: Theme.of(context).colorScheme.secondary,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _LevelTrack extends StatelessWidget {
+  const _LevelTrack({
+    required this.level,
+    required this.maxLevel,
+    required this.isBuilt,
+  });
+
+  final int level;
+  final int maxLevel;
+  final bool isBuilt;
+
+  @override
+  Widget build(BuildContext context) {
+    final active = isBuilt ? level : 0;
+
+    return Row(
+      children: [
+        Text(
+          isBuilt ? 'Niveau $level/$maxLevel' : 'Pas construit',
+          style: Theme.of(
+            context,
+          ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Row(
+            children: [
+              for (var index = 0; index < maxLevel; index++) ...[
+                Expanded(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 240),
+                    height: 7,
+                    decoration: BoxDecoration(
+                      color: index < active
+                          ? Theme.of(context).colorScheme.secondary
+                          : Theme.of(
+                              context,
+                            ).dividerColor.withValues(alpha: 0.22),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                ),
+                if (index < maxLevel - 1) const SizedBox(width: 4),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }
 

@@ -58,6 +58,19 @@ class KingdomBuilding {
     };
   }
 
+  String get imageAsset {
+    return switch (id) {
+      'focus_camp' => 'assets/images/kingdom_focus_camp.png',
+      'quiet_office' => 'assets/images/kingdom_quiet_office.png',
+      'library' => 'assets/images/kingdom_library.png',
+      'garden' => 'assets/images/kingdom_garden.png',
+      'pomodoro_workshop' => 'assets/images/kingdom_pomodoro_workshop.png',
+      'habit_guild' => 'assets/images/kingdom_habit_guild.png',
+      'focus_tower' => 'assets/images/kingdom_focus_tower.png',
+      _ => 'assets/images/kingdom_focus_camp.png',
+    };
+  }
+
   bool get canUpgrade => isBuilt && level < maxLevel;
   int get currentBonusCoins => isBuilt ? bonusCoins * level : 0;
   int get currentBonusXp => isBuilt ? bonusXp * level : 0;
@@ -90,18 +103,18 @@ class KingdomBuilding {
   }
 
   Map<String, dynamic> toMap() => {
-        'id': id,
-        'name': name,
-        'description': description,
-        'cost': cost,
-        'requiredLevel': requiredLevel,
-        'iconName': iconName,
-        'bonusCoins': bonusCoins,
-        'bonusXp': bonusXp,
-        'maxLevel': maxLevel,
-        'level': level,
-        'isBuilt': isBuilt,
-      };
+    'id': id,
+    'name': name,
+    'description': description,
+    'cost': cost,
+    'requiredLevel': requiredLevel,
+    'iconName': iconName,
+    'bonusCoins': bonusCoins,
+    'bonusXp': bonusXp,
+    'maxLevel': maxLevel,
+    'level': level,
+    'isBuilt': isBuilt,
+  };
 
   KingdomBuilding copyWith({bool? isBuilt, int? level}) {
     return KingdomBuilding(
