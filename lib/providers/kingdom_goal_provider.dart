@@ -5,15 +5,23 @@ import '../services/storage_service.dart';
 import 'kingdom_provider.dart';
 import 'player_provider.dart';
 
-final kingdomGoalProvider = NotifierProvider<KingdomGoalNotifier, List<KingdomGoal>>(KingdomGoalNotifier.new);
+final kingdomGoalProvider =
+    NotifierProvider<KingdomGoalNotifier, List<KingdomGoal>>(
+      KingdomGoalNotifier.new,
+    );
 
 final kingdomGoalProgressProvider = Provider<List<KingdomGoalProgress>>((ref) {
   final goals = ref.watch(kingdomGoalProvider);
   final buildings = ref.watch(kingdomProvider);
   final player = ref.watch(playerProvider);
   final builtCount = buildings.where((building) => building.isBuilt).length;
-  final kingdomLevel = buildings.fold(0, (total, building) => total + building.level);
-  final upgradedBuildings = buildings.where((building) => building.level >= 2).length;
+  final kingdomLevel = buildings.fold(
+    0,
+    (total, building) => total + building.level,
+  );
+  final upgradedBuildings = buildings
+      .where((building) => building.level >= 2)
+      .length;
 
   return [
     for (final goal in goals)
@@ -24,6 +32,7 @@ final kingdomGoalProgressProvider = Provider<List<KingdomGoalProgress>>((ref) {
           KingdomGoalType.kingdomLevel => kingdomLevel,
           KingdomGoalType.completedSessions => player.completedSessions,
           KingdomGoalType.upgradedBuildings => upgradedBuildings,
+          KingdomGoalType.totalFocusMinutes => player.totalFocusMinutes,
         },
       ),
   ];
@@ -36,7 +45,8 @@ class KingdomGoalProgress {
   final int current;
 
   int get cappedCurrent => current.clamp(0, goal.target);
-  double get percent => goal.target == 0 ? 1 : (cappedCurrent / goal.target).clamp(0, 1);
+  double get percent =>
+      goal.target == 0 ? 1 : (cappedCurrent / goal.target).clamp(0, 1);
   bool get isComplete => current >= goal.target;
   bool get canClaim => isComplete && !goal.isClaimed;
 }
@@ -105,6 +115,36 @@ class KingdomGoalNotifier extends Notifier<List<KingdomGoal>> {
       rewardXp: 140,
       iconName: 'castle',
     ),
+    KingdomGoal(
+      id: 'mission_study_week',
+      title: 'Mission longue : semaine studieuse',
+      description: 'Cumule 150 minutes de concentration totale.',
+      type: KingdomGoalType.totalFocusMinutes,
+      target: 150,
+      rewardCoins: 260,
+      rewardXp: 180,
+      iconName: 'timer',
+    ),
+    KingdomGoal(
+      id: 'mission_capital',
+      title: 'Mission longue : capitale du focus',
+      description: 'Atteins le niveau de royaume 15.',
+      type: KingdomGoalType.kingdomLevel,
+      target: 15,
+      rewardCoins: 360,
+      rewardXp: 240,
+      iconName: 'castle',
+    ),
+    KingdomGoal(
+      id: 'mission_master_builder',
+      title: 'Mission longue : maitre batisseur',
+      description: 'Ameliore 5 batiments au niveau 2 ou plus.',
+      type: KingdomGoalType.upgradedBuildings,
+      target: 5,
+      rewardCoins: 420,
+      rewardXp: 300,
+      iconName: 'upgrade',
+    ),
   ];
 
   @override
@@ -116,7 +156,9 @@ class KingdomGoalNotifier extends Notifier<List<KingdomGoal>> {
       return ClaimGoalResult.notFound;
     }
 
-    final progress = ref.read(kingdomGoalProgressProvider).firstWhere((item) => item.goal.id == id);
+    final progress = ref
+        .read(kingdomGoalProgressProvider)
+        .firstWhere((item) => item.goal.id == id);
     if (progress.goal.isClaimed) {
       return ClaimGoalResult.alreadyClaimed;
     }
@@ -124,7 +166,9 @@ class KingdomGoalNotifier extends Notifier<List<KingdomGoal>> {
       return ClaimGoalResult.notComplete;
     }
 
-    await ref.read(playerProvider.notifier).grantReward(
+    await ref
+        .read(playerProvider.notifier)
+        .grantReward(
           xp: progress.goal.rewardXp,
           coins: progress.goal.rewardCoins,
         );

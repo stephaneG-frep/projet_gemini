@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -5,6 +7,7 @@ import '../providers/player_provider.dart';
 import '../providers/settings_provider.dart';
 import '../providers/shop_provider.dart';
 import '../providers/timer_provider.dart';
+import '../services/audio_feedback_service.dart';
 import '../services/lifecycle_service.dart';
 import '../widgets/animated_buddy.dart';
 import '../widgets/circular_timer.dart';
@@ -61,13 +64,16 @@ class _PomodoroScreenState extends ConsumerState<PomodoroScreen> {
     ref.listen(timerProvider, (previous, next) {
       if (next.status == PomodoroStatus.completed && !_rewardShown) {
         _rewardShown = true;
+        unawaited(AudioFeedbackService.instance.playSessionComplete());
         Navigator.pushReplacementNamed(context, RewardScreen.routeName);
       }
     });
 
     final timer = ref.watch(timerProvider);
     final settings = ref.watch(settingsProvider);
-    final equippedItems = ref.watch(shopProvider).where((item) => item.isEquipped);
+    final equippedItems = ref
+        .watch(shopProvider)
+        .where((item) => item.isEquipped);
     final equippedItem = equippedItems.isEmpty ? null : equippedItems.first;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -80,7 +86,11 @@ class _PomodoroScreenState extends ConsumerState<PomodoroScreen> {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: isDark
-                  ? const [Color(0xFF101A2B), Color(0xFF16253C), Color(0xFF0F1624)]
+                  ? const [
+                      Color(0xFF101A2B),
+                      Color(0xFF16253C),
+                      Color(0xFF0F1624),
+                    ]
                   : const [Color(0xFFEAF3FF), Color(0xFFFFF7EA)],
             ),
           ),
@@ -96,12 +106,17 @@ class _PomodoroScreenState extends ConsumerState<PomodoroScreen> {
                     label: Text('Mode dev : ${settings.devTimerSeconds}s'),
                   ),
                 const Spacer(),
-                CircularTimer(progress: timer.progress, remainingSeconds: timer.remainingSeconds),
+                CircularTimer(
+                  progress: timer.progress,
+                  remainingSeconds: timer.remainingSeconds,
+                ),
                 const SizedBox(height: 32),
                 Text(
                   _statusLabel(timer.status),
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const Spacer(),
                 Wrap(
@@ -113,13 +128,17 @@ class _PomodoroScreenState extends ConsumerState<PomodoroScreen> {
                       label: 'Pause',
                       icon: Icons.pause_rounded,
                       isPrimary: false,
-                      onPressed: timer.isRunning ? ref.read(timerProvider.notifier).pause : null,
+                      onPressed: timer.isRunning
+                          ? ref.read(timerProvider.notifier).pause
+                          : null,
                     ),
                     RpgButton(
                       label: 'Reprendre',
                       icon: Icons.play_arrow_rounded,
                       isPrimary: false,
-                      onPressed: timer.status == PomodoroStatus.paused ? ref.read(timerProvider.notifier).resume : null,
+                      onPressed: timer.status == PomodoroStatus.paused
+                          ? ref.read(timerProvider.notifier).resume
+                          : null,
                     ),
                     RpgButton(
                       label: 'Abandonner',

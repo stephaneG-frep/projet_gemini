@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/player.dart';
 import '../services/storage_service.dart';
 
-final playerProvider = NotifierProvider<PlayerNotifier, Player>(PlayerNotifier.new);
+final playerProvider = NotifierProvider<PlayerNotifier, Player>(
+  PlayerNotifier.new,
+);
 
 class PlayerNotifier extends Notifier<Player> {
   StorageService get _storage => StorageService.instance;
@@ -11,7 +13,12 @@ class PlayerNotifier extends Notifier<Player> {
   @override
   Player build() => _storage.loadPlayer();
 
-  Future<void> completeFocusSession({int bonusXp = 0, int bonusCoins = 0}) async {
+  Future<void> completeFocusSession({
+    int bonusXp = 0,
+    int bonusCoins = 0,
+    int hpRecovery = 0,
+    int streakBonusCoins = 0,
+  }) async {
     var xp = state.xp + 25 + bonusXp;
     var coins = state.coins + 10 + bonusCoins;
     var earnedCoins = state.totalCoinsEarned + 10 + bonusCoins;
@@ -27,12 +34,21 @@ class PlayerNotifier extends Notifier<Player> {
       earnedCoins += 50;
     }
 
+    if (streakBonusCoins > 0 && streak % 3 == 0) {
+      coins += streakBonusCoins;
+      earnedCoins += streakBonusCoins;
+    }
+
     while (xp >= xpToNextLevel) {
       xp -= xpToNextLevel;
       level += 1;
       maxHp += 10;
       hp = maxHp;
       xpToNextLevel = (xpToNextLevel * 1.25).round() + 25;
+    }
+
+    if (hpRecovery > 0) {
+      hp = (hp + hpRecovery).clamp(0, maxHp);
     }
 
     state = state.copyWith(
@@ -60,7 +76,10 @@ class PlayerNotifier extends Notifier<Player> {
         failedSessions: state.failedSessions + 1,
       );
     } else {
-      state = state.copyWith(hp: newHp, failedSessions: state.failedSessions + 1);
+      state = state.copyWith(
+        hp: newHp,
+        failedSessions: state.failedSessions + 1,
+      );
     }
     await _storage.savePlayer(state);
   }

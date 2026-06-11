@@ -18,8 +18,16 @@ class GuideScreen extends StatelessWidget {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: isDark
-                  ? const [Color(0xFF101A2B), Color(0xFF16253C), Color(0xFF0F1624)]
-                  : const [Color(0xFFF4F8FF), Color(0xFFFFF7EA), Color(0xFFF8F2E8)],
+                  ? const [
+                      Color(0xFF101A2B),
+                      Color(0xFF16253C),
+                      Color(0xFF0F1624),
+                    ]
+                  : const [
+                      Color(0xFFF4F8FF),
+                      Color(0xFFFFF7EA),
+                      Color(0xFFF8F2E8),
+                    ],
             ),
           ),
           child: ListView(
@@ -27,7 +35,9 @@ class GuideScreen extends StatelessWidget {
             children: [
               Text(
                 'Comment jouer avec FocusBuddy',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900),
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w900,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
@@ -39,61 +49,85 @@ class GuideScreen extends StatelessWidget {
                 number: '1',
                 icon: Icons.play_arrow_rounded,
                 title: 'Lance une quete',
-                body: 'Depuis l accueil, appuie sur Commencer une session. En mode normal, la quete dure 25 minutes.',
+                body:
+                    'Depuis l accueil, appuie sur Commencer une session. En mode normal, la quete dure 25 minutes.',
               ),
               const _GuideStep(
                 number: '2',
                 icon: Icons.self_improvement,
                 title: 'Reste concentre',
-                body: 'Tu peux mettre en pause ou reprendre. Si tu quittes l app pendant une session active, ton heros perd 10 PV.',
+                body:
+                    'Tu peux mettre en pause ou reprendre. Si tu quittes l app pendant une session active, ton heros perd 10 PV.',
               ),
               const _GuideStep(
                 number: '3',
                 icon: Icons.emoji_events_rounded,
                 title: 'Recolte tes recompenses',
-                body: 'Une session terminee donne +25 XP et +10 pieces. Toutes les 4 sessions reussies ajoutent un bonus de 50 pieces. Les batiments du royaume peuvent ajouter encore plus de recompenses.',
+                body:
+                    'Une session terminee donne +25 XP et +10 pieces. Toutes les 4 sessions reussies ajoutent un bonus de 50 pieces. Les batiments et la strategie du royaume peuvent ajouter encore plus de recompenses.',
               ),
               const _GuideStep(
                 number: '4',
                 icon: Icons.favorite_rounded,
                 title: 'Protege tes PV',
-                body: 'Si les PV tombent a zero, la serie repart a zero et ton heros recupere 50% de ses PV max.',
+                body:
+                    'Si les PV tombent a zero, la serie repart a zero et ton heros recupere 50% de ses PV max.',
               ),
               const _GuideStep(
                 number: '5',
                 icon: Icons.castle_rounded,
                 title: 'Construis ton royaume',
-                body: 'Depuis l accueil, ouvre Mon royaume ou l icone chateau. Depense tes pieces pour construire des batiments comme le Bureau calme, la Bibliotheque ou la Tour de concentration.',
+                body:
+                    'Depuis l accueil, ouvre Mon royaume ou l icone chateau. Depense tes pieces pour construire des batiments comme le Bureau calme, la Bibliotheque ou la Tour de concentration.',
               ),
               const _GuideStep(
                 number: '6',
                 icon: Icons.auto_awesome_rounded,
                 title: 'Debloque des bonus',
-                body: 'Certains batiments ajoutent un bonus permanent a chaque session terminee : plus d XP, plus de pieces, ou les deux. Ameliore les batiments jusqu au niveau 3 pour augmenter ces bonus.',
+                body:
+                    'Certains batiments ajoutent des pouvoirs : plus d XP, plus de pieces, recuperation de PV ou bonus de serie. Ameliore les batiments jusqu au niveau 3 pour renforcer ces effets.',
               ),
               const _GuideStep(
                 number: '7',
-                icon: Icons.today_rounded,
-                title: 'Fais les quetes du jour',
-                body: 'Chaque jour, l accueil propose 3 petites quetes. Termine-les puis reclame les recompenses. Elles se reinitialisent automatiquement le jour suivant.',
+                icon: Icons.balance_rounded,
+                title: 'Choisis une strategie',
+                body:
+                    'Dans le royaume, choisis une priorite active : Equilibre, Etude, Commerce ou Recuperation. Cette strategie modifie les gains de tes prochaines sessions.',
               ),
               const _GuideStep(
                 number: '8',
-                icon: Icons.flag_rounded,
-                title: 'Suis les objectifs',
-                body: 'Dans le royaume, les objectifs te donnent une direction : construire plusieurs batiments, ameliorer le royaume ou terminer des sessions. Quand un objectif est fini, reclame sa recompense.',
+                icon: Icons.today_rounded,
+                title: 'Fais les quetes du jour',
+                body:
+                    'Chaque jour, l accueil propose 3 petites quetes. Termine-les puis reclame les recompenses. Elles se reinitialisent automatiquement le jour suivant.',
               ),
               const _GuideStep(
                 number: '9',
-                icon: Icons.storefront_rounded,
-                title: 'Achete et equipe',
-                body: 'La boutique contient des cosmetiques pour ton personnage. Les pieces servent donc a deux choses : embellir ton heros et developper ton royaume.',
+                icon: Icons.flag_rounded,
+                title: 'Suis les objectifs',
+                body:
+                    'Dans le royaume, les objectifs et missions longues te donnent une direction : construire, ameliorer, cumuler du temps de focus et faire grandir les quartiers.',
               ),
               const _GuideStep(
                 number: '10',
+                icon: Icons.volume_up_rounded,
+                title: 'Celebre la fin',
+                body:
+                    'Quand le timer arrive a zero, FocusBuddy joue un petit son et une voix de felicitation pour marquer la victoire.',
+              ),
+              const _GuideStep(
+                number: '11',
+                icon: Icons.storefront_rounded,
+                title: 'Achete et equipe',
+                body:
+                    'La boutique contient des cosmetiques pour ton personnage. Les pieces servent donc a deux choses : embellir ton heros et developper ton royaume.',
+              ),
+              const _GuideStep(
+                number: '12',
                 icon: Icons.speed_rounded,
                 title: 'Teste avec le mode dev',
-                body: 'Active le mode dev sur l accueil pour raccourcir le timer entre 5 et 60 secondes et tester les recompenses rapidement.',
+                body:
+                    'Active le mode dev sur l accueil pour raccourcir le timer entre 5 et 60 secondes et tester les recompenses rapidement.',
               ),
               const SizedBox(height: 10),
               const _KingdomHelpCard(),
@@ -104,11 +138,14 @@ class GuideScreen extends StatelessWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.tips_and_updates_rounded, color: Theme.of(context).colorScheme.secondary),
+                      Icon(
+                        Icons.tips_and_updates_rounded,
+                        color: Theme.of(context).colorScheme.secondary,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Conseil : commence par une seule session. La serie et les niveaux sont la pour encourager la regularite, pas pour te mettre la pression.',
+                          'Conseil : FocusBuddy est un jeu de motivation. Le but est de t aider a faire tes devoirs, ton sport ou tes projets sans tricher. Une vraie petite session vaut mieux qu une fausse grande serie.',
                           style: Theme.of(context).textTheme.bodyLarge,
                         ),
                       ),
@@ -139,19 +176,24 @@ class _KingdomHelpCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.castle_rounded, color: Theme.of(context).colorScheme.secondary),
+                Icon(
+                  Icons.castle_rounded,
+                  color: Theme.of(context).colorScheme.secondary,
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     'A quoi sert le royaume ?',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
             Text(
-              'Le royaume donne un objectif long terme a tes sessions. Les pieces que tu gagnes deviennent des constructions visibles, et certaines constructions rendent les prochaines sessions plus rentables.',
+              'Le royaume donne un objectif long terme a tes sessions. Les pieces deviennent des constructions visibles, les quartiers se debloquent, les missions longues donnent une direction, et les pouvoirs rendent les prochaines sessions plus utiles.',
               style: Theme.of(context).textTheme.bodyLarge,
             ),
             const SizedBox(height: 14),
@@ -160,34 +202,67 @@ class _KingdomHelpCard extends StatelessWidget {
               runSpacing: 8,
               children: [
                 _GuideTag(
-                  icon: Icons.toll_rounded,
+                  icon: Icons.paid_rounded,
                   label: 'Pieces = chantiers',
-                  color: isDark ? const Color(0xFF243552) : const Color(0xFFFFF1C9),
+                  color: isDark
+                      ? const Color(0xFF243552)
+                      : const Color(0xFFFFF1C9),
                 ),
                 _GuideTag(
                   icon: Icons.lock_open_rounded,
                   label: 'Niveaux = debloquages',
-                  color: isDark ? const Color(0xFF243552) : const Color(0xFFEAF3FF),
+                  color: isDark
+                      ? const Color(0xFF243552)
+                      : const Color(0xFFEAF3FF),
                 ),
                 _GuideTag(
                   icon: Icons.auto_awesome_rounded,
-                  label: 'Batiments = bonus',
-                  color: isDark ? const Color(0xFF243552) : const Color(0xFFE6F6EC),
+                  label: 'Batiments = pouvoirs',
+                  color: isDark
+                      ? const Color(0xFF243552)
+                      : const Color(0xFFE6F6EC),
                 ),
                 _GuideTag(
                   icon: Icons.upgrade_rounded,
                   label: 'Niveaux = meilleurs bonus',
-                  color: isDark ? const Color(0xFF243552) : const Color(0xFFFFE8B8),
+                  color: isDark
+                      ? const Color(0xFF243552)
+                      : const Color(0xFFFFE8B8),
+                ),
+                _GuideTag(
+                  icon: Icons.balance_rounded,
+                  label: 'Strategie = priorite',
+                  color: isDark
+                      ? const Color(0xFF243552)
+                      : const Color(0xFFEAF3FF),
+                ),
+                _GuideTag(
+                  icon: Icons.holiday_village_rounded,
+                  label: 'Quartiers = progression',
+                  color: isDark
+                      ? const Color(0xFF243552)
+                      : const Color(0xFFF2F6FF),
+                ),
+                _GuideTag(
+                  icon: Icons.flag_rounded,
+                  label: 'Missions longues = objectif',
+                  color: isDark
+                      ? const Color(0xFF243552)
+                      : const Color(0xFFFFE8B8),
                 ),
                 _GuideTag(
                   icon: Icons.flag_rounded,
                   label: 'Objectifs = recompenses',
-                  color: isDark ? const Color(0xFF243552) : const Color(0xFFF2F6FF),
+                  color: isDark
+                      ? const Color(0xFF243552)
+                      : const Color(0xFFF2F6FF),
                 ),
                 _GuideTag(
                   icon: Icons.today_rounded,
                   label: 'Quetes du jour = retour quotidien',
-                  color: isDark ? const Color(0xFF243552) : const Color(0xFFEAF3FF),
+                  color: isDark
+                      ? const Color(0xFF243552)
+                      : const Color(0xFFEAF3FF),
                 ),
               ],
             ),
@@ -223,7 +298,12 @@ class _GuideTag extends StatelessWidget {
           children: [
             Icon(icon, size: 16, color: Theme.of(context).colorScheme.primary),
             const SizedBox(width: 6),
-            Text(label, style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w800)),
+            Text(
+              label,
+              style: Theme.of(
+                context,
+              ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w800),
+            ),
           ],
         ),
       ),
@@ -262,7 +342,9 @@ class _GuideStep extends StatelessWidget {
                 child: Center(
                   child: Text(
                     number,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                 ),
               ),
@@ -274,12 +356,17 @@ class _GuideStep extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
+                      Icon(
+                        icon,
+                        size: 20,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           title,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w800),
                         ),
                       ),
                     ],

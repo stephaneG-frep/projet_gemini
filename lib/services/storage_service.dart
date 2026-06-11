@@ -19,6 +19,7 @@ class StorageService {
   static const _kingdomKey = 'kingdom_buildings';
   static const _kingdomGoalsKey = 'kingdom_goals';
   static const _dailyQuestStateKey = 'daily_quest_state';
+  static const _kingdomStrategyKey = 'kingdom_strategy';
 
   late final Box<dynamic> _box;
 
@@ -45,7 +46,8 @@ class StorageService {
     return player;
   }
 
-  Future<void> savePlayer(Player player) => _box.put(_playerKey, player.toMap());
+  Future<void> savePlayer(Player player) =>
+      _box.put(_playerKey, player.toMap());
 
   List<ShopItem> loadShopItems(List<ShopItem> defaults) {
     final data = _box.get(_shopKey);
@@ -69,16 +71,7 @@ class StorageService {
       final saved = data.whereType<Map>().map(KingdomBuilding.fromMap).toList();
       return [
         for (final defaultBuilding in defaults)
-          saved
-              .firstWhere(
-                (building) => building.id == defaultBuilding.id,
-                orElse: () => defaultBuilding,
-              )
-              .copyWith(
-                isBuilt: saved
-                    .where((building) => building.id == defaultBuilding.id)
-                    .any((building) => building.isBuilt),
-              ),
+          _mergeBuilding(defaultBuilding, saved),
       ];
     }
     saveKingdomBuildings(defaults);
@@ -86,7 +79,36 @@ class StorageService {
   }
 
   Future<void> saveKingdomBuildings(List<KingdomBuilding> buildings) {
-    return _box.put(_kingdomKey, buildings.map((building) => building.toMap()).toList());
+    return _box.put(
+      _kingdomKey,
+      buildings.map((building) => building.toMap()).toList(),
+    );
+  }
+
+  KingdomBuilding _mergeBuilding(
+    KingdomBuilding defaultBuilding,
+    List<KingdomBuilding> saved,
+  ) {
+    final savedBuilding = saved
+        .where((building) => building.id == defaultBuilding.id)
+        .firstOrNull;
+    if (savedBuilding == null) {
+      return defaultBuilding;
+    }
+
+    return defaultBuilding.copyWith(
+      isBuilt: savedBuilding.isBuilt,
+      level: savedBuilding.level,
+    );
+  }
+
+  String? loadKingdomStrategyName() {
+    final data = _box.get(_kingdomStrategyKey);
+    return data is String ? data : null;
+  }
+
+  Future<void> saveKingdomStrategyName(String name) {
+    return _box.put(_kingdomStrategyKey, name);
   }
 
   List<KingdomGoal> loadKingdomGoals(List<KingdomGoal> defaults) {
@@ -107,7 +129,10 @@ class StorageService {
   }
 
   Future<void> saveKingdomGoals(List<KingdomGoal> goals) {
-    return _box.put(_kingdomGoalsKey, goals.map((goal) => goal.toMap()).toList());
+    return _box.put(
+      _kingdomGoalsKey,
+      goals.map((goal) => goal.toMap()).toList(),
+    );
   }
 
   DailyQuestState? loadDailyQuestState() {
@@ -132,5 +157,6 @@ class StorageService {
     return settings;
   }
 
-  Future<void> saveSettings(AppSettings settings) => _box.put(_settingsKey, settings.toMap());
+  Future<void> saveSettings(AppSettings settings) =>
+      _box.put(_settingsKey, settings.toMap());
 }

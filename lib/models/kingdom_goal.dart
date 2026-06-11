@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 
-enum KingdomGoalType { builtBuildings, kingdomLevel, completedSessions, upgradedBuildings }
+enum KingdomGoalType {
+  builtBuildings,
+  kingdomLevel,
+  completedSessions,
+  upgradedBuildings,
+  totalFocusMinutes,
+}
 
 class KingdomGoal {
   const KingdomGoal({
@@ -65,16 +71,16 @@ class KingdomGoal {
   }
 
   Map<String, dynamic> toMap() => {
-        'id': id,
-        'title': title,
-        'description': description,
-        'type': type.name,
-        'target': target,
-        'rewardCoins': rewardCoins,
-        'rewardXp': rewardXp,
-        'iconName': iconName,
-        'isClaimed': isClaimed,
-      };
+    'id': id,
+    'title': title,
+    'description': description,
+    'type': type.name,
+    'target': target,
+    'rewardCoins': rewardCoins,
+    'rewardXp': rewardXp,
+    'iconName': iconName,
+    'isClaimed': isClaimed,
+  };
 
   KingdomGoal copyWith({bool? isClaimed}) {
     return KingdomGoal(

@@ -1,25 +1,135 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/kingdom_building.dart';
 import '../services/storage_service.dart';
 import 'player_provider.dart';
 
-final kingdomProvider = NotifierProvider<KingdomNotifier, List<KingdomBuilding>>(KingdomNotifier.new);
+final kingdomProvider =
+    NotifierProvider<KingdomNotifier, List<KingdomBuilding>>(
+      KingdomNotifier.new,
+    );
+
+final kingdomStrategyProvider =
+    NotifierProvider<KingdomStrategyNotifier, KingdomStrategy>(
+      KingdomStrategyNotifier.new,
+    );
+
+enum KingdomStrategy { balanced, scholar, merchant, recovery }
+
+extension KingdomStrategyDetails on KingdomStrategy {
+  String get title {
+    return switch (this) {
+      KingdomStrategy.balanced => 'Equilibre',
+      KingdomStrategy.scholar => 'Etude',
+      KingdomStrategy.merchant => 'Commerce',
+      KingdomStrategy.recovery => 'Recuperation',
+    };
+  }
+
+  String get description {
+    return switch (this) {
+      KingdomStrategy.balanced => 'Un petit bonus partout.',
+      KingdomStrategy.scholar => 'Plus d XP pour monter de niveau.',
+      KingdomStrategy.merchant => 'Plus de pieces pour construire vite.',
+      KingdomStrategy.recovery => 'Plus de HP pour tenir le rythme.',
+    };
+  }
+
+  IconData get icon {
+    return switch (this) {
+      KingdomStrategy.balanced => Icons.balance_rounded,
+      KingdomStrategy.scholar => Icons.school_rounded,
+      KingdomStrategy.merchant => Icons.paid_rounded,
+      KingdomStrategy.recovery => Icons.favorite_rounded,
+    };
+  }
+
+  int get bonusXp {
+    return switch (this) {
+      KingdomStrategy.balanced => 3,
+      KingdomStrategy.scholar => 10,
+      KingdomStrategy.merchant => 0,
+      KingdomStrategy.recovery => 0,
+    };
+  }
+
+  int get bonusCoins {
+    return switch (this) {
+      KingdomStrategy.balanced => 2,
+      KingdomStrategy.scholar => 0,
+      KingdomStrategy.merchant => 6,
+      KingdomStrategy.recovery => 0,
+    };
+  }
+
+  int get bonusHpRecovery {
+    return switch (this) {
+      KingdomStrategy.balanced => 1,
+      KingdomStrategy.scholar => 0,
+      KingdomStrategy.merchant => 0,
+      KingdomStrategy.recovery => 7,
+    };
+  }
+}
 
 class KingdomBonus {
-  const KingdomBonus({required this.xp, required this.coins});
+  const KingdomBonus({
+    required this.xp,
+    required this.coins,
+    required this.hpRecovery,
+    required this.streakCoins,
+  });
 
   final int xp;
   final int coins;
+  final int hpRecovery;
+  final int streakCoins;
 }
 
 final kingdomBonusProvider = Provider<KingdomBonus>((ref) {
   final buildings = ref.watch(kingdomProvider);
+  final strategy = ref.watch(kingdomStrategyProvider);
+  final gardenLevel = buildings
+      .where((building) => building.id == 'garden' && building.isBuilt)
+      .fold(0, (total, building) => total + building.level);
+  final guildLevel = buildings
+      .where((building) => building.id == 'habit_guild' && building.isBuilt)
+      .fold(0, (total, building) => total + building.level);
+
   return KingdomBonus(
-    xp: buildings.where((building) => building.isBuilt).fold(0, (total, building) => total + building.currentBonusXp),
-    coins: buildings.where((building) => building.isBuilt).fold(0, (total, building) => total + building.currentBonusCoins),
+    xp:
+        buildings
+            .where((building) => building.isBuilt)
+            .fold(0, (total, building) => total + building.currentBonusXp) +
+        strategy.bonusXp,
+    coins:
+        buildings
+            .where((building) => building.isBuilt)
+            .fold(0, (total, building) => total + building.currentBonusCoins) +
+        strategy.bonusCoins,
+    hpRecovery: (gardenLevel * 3) + strategy.bonusHpRecovery,
+    streakCoins: guildLevel * 15,
   );
 });
+
+class KingdomStrategyNotifier extends Notifier<KingdomStrategy> {
+  StorageService get _storage => StorageService.instance;
+
+  @override
+  KingdomStrategy build() {
+    final savedName = _storage.loadKingdomStrategyName();
+    return KingdomStrategy.values.firstWhere(
+      (strategy) => strategy.name == savedName,
+      orElse: () => KingdomStrategy.balanced,
+    );
+  }
+
+  Future<void> setStrategy(KingdomStrategy strategy) async {
+    state = strategy;
+    await _storage.saveKingdomStrategyName(strategy.name);
+  }
+}
 
 class KingdomNotifier extends Notifier<List<KingdomBuilding>> {
   StorageService get _storage => StorageService.instance;
@@ -28,7 +138,8 @@ class KingdomNotifier extends Notifier<List<KingdomBuilding>> {
     KingdomBuilding(
       id: 'focus_camp',
       name: 'Camp du Focus',
-      description: 'Le premier feu de camp du royaume. Chaque grande aventure commence ici.',
+      description:
+          'Le premier feu de camp du royaume. Chaque grande aventure commence ici.',
       cost: 0,
       requiredLevel: 1,
       iconName: 'home',
@@ -41,11 +152,12 @@ class KingdomNotifier extends Notifier<List<KingdomBuilding>> {
     KingdomBuilding(
       id: 'quiet_office',
       name: 'Bureau calme',
-      description: 'Un lieu stable pour transformer les intentions en vraies sessions.',
-      cost: 60,
+      description:
+          'Un lieu stable pour transformer les intentions en vraies sessions.',
+      cost: 45,
       requiredLevel: 1,
       iconName: 'desk',
-      bonusCoins: 1,
+      bonusCoins: 2,
       bonusXp: 0,
       maxLevel: 3,
     ),
@@ -53,61 +165,65 @@ class KingdomNotifier extends Notifier<List<KingdomBuilding>> {
       id: 'library',
       name: 'Bibliotheque',
       description: 'Les livres du royaume renforcent chaque session terminee.',
-      cost: 140,
+      cost: 120,
       requiredLevel: 2,
       iconName: 'library',
       bonusCoins: 0,
-      bonusXp: 5,
+      bonusXp: 6,
       maxLevel: 3,
     ),
     KingdomBuilding(
       id: 'garden',
       name: 'Jardin de recuperation',
-      description: 'Un espace doux pour garder le rythme sans se bruler les ailes.',
-      cost: 220,
+      description:
+          'Un espace doux pour garder le rythme sans se bruler les ailes.',
+      cost: 190,
       requiredLevel: 3,
       iconName: 'garden',
-      bonusCoins: 2,
-      bonusXp: 0,
+      bonusCoins: 1,
+      bonusXp: 2,
       maxLevel: 3,
     ),
     KingdomBuilding(
       id: 'pomodoro_workshop',
       name: 'Atelier Pomodoro',
-      description: 'Les artisans du temps ameliorent les recompenses de chaque quete.',
-      cost: 360,
+      description:
+          'Les artisans du temps ameliorent les recompenses de chaque quete.',
+      cost: 320,
       requiredLevel: 4,
       iconName: 'workshop',
-      bonusCoins: 2,
-      bonusXp: 5,
+      bonusCoins: 3,
+      bonusXp: 6,
       maxLevel: 3,
     ),
     KingdomBuilding(
       id: 'habit_guild',
       name: 'Guilde des habitudes',
       description: 'Une guilde dediee a la regularite et aux longues series.',
-      cost: 560,
+      cost: 500,
       requiredLevel: 6,
       iconName: 'guild',
-      bonusCoins: 3,
+      bonusCoins: 4,
       bonusXp: 8,
       maxLevel: 3,
     ),
     KingdomBuilding(
       id: 'focus_tower',
       name: 'Tour de concentration',
-      description: 'Le symbole du royaume : chaque session y laisse une trace visible.',
-      cost: 900,
+      description:
+          'Le symbole du royaume : chaque session y laisse une trace visible.',
+      cost: 780,
       requiredLevel: 8,
       iconName: 'tower',
-      bonusCoins: 5,
-      bonusXp: 12,
+      bonusCoins: 6,
+      bonusXp: 14,
       maxLevel: 3,
     ),
   ];
 
   @override
-  List<KingdomBuilding> build() => _storage.loadKingdomBuildings(defaultBuildings);
+  List<KingdomBuilding> build() =>
+      _storage.loadKingdomBuildings(defaultBuildings);
 
   Future<BuildResult> buildBuilding(String id) async {
     final index = state.indexWhere((building) => building.id == id);
@@ -124,7 +240,9 @@ class KingdomNotifier extends Notifier<List<KingdomBuilding>> {
       return BuildResult.levelTooLow;
     }
 
-    final paid = await ref.read(playerProvider.notifier).spendCoins(building.cost);
+    final paid = await ref
+        .read(playerProvider.notifier)
+        .spendCoins(building.cost);
     if (!paid) {
       return BuildResult.notEnoughCoins;
     }
@@ -150,7 +268,9 @@ class KingdomNotifier extends Notifier<List<KingdomBuilding>> {
       return BuildResult.maxLevel;
     }
 
-    final paid = await ref.read(playerProvider.notifier).spendCoins(building.upgradeCost);
+    final paid = await ref
+        .read(playerProvider.notifier)
+        .spendCoins(building.upgradeCost);
     if (!paid) {
       return BuildResult.notEnoughCoins;
     }
@@ -163,4 +283,13 @@ class KingdomNotifier extends Notifier<List<KingdomBuilding>> {
   }
 }
 
-enum BuildResult { built, upgraded, alreadyBuilt, notBuilt, maxLevel, levelTooLow, notEnoughCoins, notFound }
+enum BuildResult {
+  built,
+  upgraded,
+  alreadyBuilt,
+  notBuilt,
+  maxLevel,
+  levelTooLow,
+  notEnoughCoins,
+  notFound,
+}

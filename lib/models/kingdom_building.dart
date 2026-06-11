@@ -76,7 +76,7 @@ class KingdomBuilding {
   int get currentBonusXp => isBuilt ? bonusXp * level : 0;
   int get nextBonusCoins => bonusCoins * (level + 1).clamp(0, maxLevel);
   int get nextBonusXp => bonusXp * (level + 1).clamp(0, maxLevel);
-  int get upgradeCost => (cost * (1.15 + (level * 0.65))).round();
+  int get upgradeCost => (cost * (1.05 + (level * 0.55))).round();
 
   bool get hasBonus => bonusCoins > 0 || bonusXp > 0;
 

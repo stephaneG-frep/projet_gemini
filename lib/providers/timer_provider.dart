@@ -27,7 +27,8 @@ class PomodoroTimerState {
   final int remainingSeconds;
   final PomodoroStatus status;
 
-  bool get isActive => status == PomodoroStatus.running || status == PomodoroStatus.paused;
+  bool get isActive =>
+      status == PomodoroStatus.running || status == PomodoroStatus.paused;
   bool get isRunning => status == PomodoroStatus.running;
   double get progress => 1 - (remainingSeconds / totalSeconds);
 
@@ -44,7 +45,9 @@ class PomodoroTimerState {
   }
 }
 
-final timerProvider = NotifierProvider<TimerNotifier, PomodoroTimerState>(TimerNotifier.new);
+final timerProvider = NotifierProvider<TimerNotifier, PomodoroTimerState>(
+  TimerNotifier.new,
+);
 
 class TimerNotifier extends Notifier<PomodoroTimerState> {
   Timer? _timer;
@@ -59,7 +62,9 @@ class TimerNotifier extends Notifier<PomodoroTimerState> {
   void start() {
     _timer?.cancel();
     final totalSeconds = ref.read(settingsProvider).focusSeconds;
-    state = PomodoroTimerState.initial(totalSeconds: totalSeconds).copyWith(status: PomodoroStatus.running);
+    state = PomodoroTimerState.initial(
+      totalSeconds: totalSeconds,
+    ).copyWith(status: PomodoroStatus.running);
     _timer = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
   }
 
@@ -81,7 +86,9 @@ class TimerNotifier extends Notifier<PomodoroTimerState> {
 
   void abandon() {
     _timer?.cancel();
-    state = PomodoroTimerState.initial(totalSeconds: state.totalSeconds).copyWith(status: PomodoroStatus.abandoned);
+    state = PomodoroTimerState.initial(
+      totalSeconds: state.totalSeconds,
+    ).copyWith(status: PomodoroStatus.abandoned);
   }
 
   void reset() {
@@ -93,11 +100,18 @@ class TimerNotifier extends Notifier<PomodoroTimerState> {
   Future<void> _tick() async {
     if (state.remainingSeconds <= 1) {
       _timer?.cancel();
-      state = state.copyWith(remainingSeconds: 0, status: PomodoroStatus.completed);
+      state = state.copyWith(
+        remainingSeconds: 0,
+        status: PomodoroStatus.completed,
+      );
       final kingdomBonus = ref.read(kingdomBonusProvider);
-      await ref.read(playerProvider.notifier).completeFocusSession(
+      await ref
+          .read(playerProvider.notifier)
+          .completeFocusSession(
             bonusXp: kingdomBonus.xp,
             bonusCoins: kingdomBonus.coins,
+            hpRecovery: kingdomBonus.hpRecovery,
+            streakBonusCoins: kingdomBonus.streakCoins,
           );
       return;
     }

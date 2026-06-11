@@ -17,6 +17,7 @@ class KingdomScreen extends ConsumerWidget {
     final player = ref.watch(playerProvider);
     final buildings = ref.watch(kingdomProvider);
     final bonus = ref.watch(kingdomBonusProvider);
+    final strategy = ref.watch(kingdomStrategyProvider);
     final goals = ref.watch(kingdomGoalProgressProvider);
     final builtCount = buildings.where((building) => building.isBuilt).length;
     final kingdomLevel = buildings.fold(
@@ -72,6 +73,17 @@ class KingdomScreen extends ConsumerWidget {
               const SizedBox(height: 16),
               _KingdomMap(buildings: buildings),
               const SizedBox(height: 18),
+              _KingdomDistricts(
+                builtCount: builtCount,
+                kingdomLevel: kingdomLevel,
+              ),
+              const SizedBox(height: 18),
+              _SpecialBonusPanel(bonus: bonus),
+              const SizedBox(height: 18),
+              _StrategyPanel(selected: strategy),
+              const SizedBox(height: 18),
+              _LongMissions(progressItems: goals),
+              const SizedBox(height: 18),
               _KingdomGoals(progressItems: goals),
               const SizedBox(height: 18),
               Text(
@@ -98,9 +110,18 @@ class _KingdomGoals extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final activeGoals = [
-      ...progressItems.where((item) => item.canClaim),
-      ...progressItems.where((item) => !item.canClaim && !item.goal.isClaimed),
-      ...progressItems.where((item) => item.goal.isClaimed),
+      ...progressItems.where(
+        (item) => item.canClaim && !item.goal.id.startsWith('mission_'),
+      ),
+      ...progressItems.where(
+        (item) =>
+            !item.canClaim &&
+            !item.goal.isClaimed &&
+            !item.goal.id.startsWith('mission_'),
+      ),
+      ...progressItems.where(
+        (item) => item.goal.isClaimed && !item.goal.id.startsWith('mission_'),
+      ),
     ].take(4).toList(growable: false);
 
     return Column(
@@ -115,6 +136,507 @@ class _KingdomGoals extends StatelessWidget {
         const SizedBox(height: 10),
         ...activeGoals.map((item) => _GoalCard(progress: item)),
       ],
+    );
+  }
+}
+
+class _LongMissions extends StatelessWidget {
+  const _LongMissions({required this.progressItems});
+
+  final List<KingdomGoalProgress> progressItems;
+
+  @override
+  Widget build(BuildContext context) {
+    final missions = [
+      ...progressItems.where(
+        (item) => item.goal.id.startsWith('mission_') && item.canClaim,
+      ),
+      ...progressItems.where(
+        (item) =>
+            item.goal.id.startsWith('mission_') &&
+            !item.canClaim &&
+            !item.goal.isClaimed,
+      ),
+      ...progressItems.where(
+        (item) => item.goal.id.startsWith('mission_') && item.goal.isClaimed,
+      ),
+    ].take(3).toList(growable: false);
+
+    if (missions.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Missions longues',
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'Des objectifs plus grands pour donner une direction a ton royaume.',
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+        const SizedBox(height: 10),
+        ...missions.map((item) => _GoalCard(progress: item)),
+      ],
+    );
+  }
+}
+
+class _SpecialBonusPanel extends StatelessWidget {
+  const _SpecialBonusPanel({required this.bonus});
+
+  final KingdomBonus bonus;
+
+  @override
+  Widget build(BuildContext context) {
+    final items = [
+      _BonusInfo(
+        icon: Icons.auto_awesome_rounded,
+        title: 'Savoir',
+        value: '+${bonus.xp} XP/session',
+        isActive: bonus.xp > 0,
+      ),
+      _BonusInfo(
+        icon: Icons.paid_rounded,
+        title: 'Economie',
+        value: '+${bonus.coins} pieces/session',
+        isActive: bonus.coins > 0,
+      ),
+      _BonusInfo(
+        icon: Icons.favorite_rounded,
+        title: 'Recuperation',
+        value: '+${bonus.hpRecovery} HP/session',
+        isActive: bonus.hpRecovery > 0,
+      ),
+      _BonusInfo(
+        icon: Icons.local_fire_department_rounded,
+        title: 'Elan de serie',
+        value: '+${bonus.streakCoins} pieces toutes les 3 series',
+        isActive: bonus.streakCoins > 0,
+      ),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Pouvoirs du royaume',
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+        ),
+        const SizedBox(height: 10),
+        GridView.builder(
+          itemCount: items.length,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            childAspectRatio: 1.62,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+          ),
+          itemBuilder: (context, index) => _BonusTile(info: items[index]),
+        ),
+      ],
+    );
+  }
+}
+
+class _BonusInfo {
+  const _BonusInfo({
+    required this.icon,
+    required this.title,
+    required this.value,
+    required this.isActive,
+  });
+
+  final IconData icon;
+  final String title;
+  final String value;
+  final bool isActive;
+}
+
+class _BonusTile extends StatelessWidget {
+  const _BonusTile({required this.info});
+
+  final _BonusInfo info;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: info.isActive
+            ? Theme.of(context).colorScheme.surface
+            : (isDark ? const Color(0xFF172033) : const Color(0xFFF3F5FA)),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: info.isActive
+              ? Theme.of(context).colorScheme.secondary.withValues(alpha: 0.45)
+              : Theme.of(context).dividerColor.withValues(alpha: 0.35),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            Icon(
+              info.isActive ? info.icon : Icons.lock_rounded,
+              color: info.isActive
+                  ? Theme.of(context).colorScheme.secondary
+                  : Theme.of(context).disabledColor,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    info.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    info.isActive ? info.value : 'A debloquer',
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _KingdomDistricts extends StatelessWidget {
+  const _KingdomDistricts({
+    required this.builtCount,
+    required this.kingdomLevel,
+  });
+
+  final int builtCount;
+  final int kingdomLevel;
+
+  @override
+  Widget build(BuildContext context) {
+    final districts = [
+      _DistrictInfo(
+        name: 'Campement',
+        description: 'Le point de depart de ton royaume.',
+        icon: Icons.cottage_rounded,
+        unlocked: builtCount >= 1,
+        progress: builtCount.clamp(0, 1) / 1,
+      ),
+      _DistrictInfo(
+        name: 'Village',
+        description: 'Un vrai lieu commence a exister.',
+        icon: Icons.holiday_village_rounded,
+        unlocked: builtCount >= 3,
+        progress: builtCount.clamp(0, 3) / 3,
+      ),
+      _DistrictInfo(
+        name: 'Quartier du savoir',
+        description: 'Les batiments avances donnent une direction.',
+        icon: Icons.local_library_rounded,
+        unlocked: kingdomLevel >= 6,
+        progress: kingdomLevel.clamp(0, 6) / 6,
+      ),
+      _DistrictInfo(
+        name: 'Cite royale',
+        description: 'Le royaume devient un objectif long terme.',
+        icon: Icons.castle_rounded,
+        unlocked: kingdomLevel >= 12,
+        progress: kingdomLevel.clamp(0, 12) / 12,
+      ),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Quartiers',
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+        ),
+        const SizedBox(height: 10),
+        SizedBox(
+          height: 142,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: districts.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 10),
+            itemBuilder: (context, index) {
+              return _DistrictCard(info: districts[index]);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _DistrictInfo {
+  const _DistrictInfo({
+    required this.name,
+    required this.description,
+    required this.icon,
+    required this.unlocked,
+    required this.progress,
+  });
+
+  final String name;
+  final String description;
+  final IconData icon;
+  final bool unlocked;
+  final double progress;
+}
+
+class _DistrictCard extends StatelessWidget {
+  const _DistrictCard({required this.info});
+
+  final _DistrictInfo info;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return SizedBox(
+      width: 210,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: info.unlocked
+              ? Theme.of(context).colorScheme.surface
+              : (isDark ? const Color(0xFF172033) : const Color(0xFFF3F5FA)),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: info.unlocked
+                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.35)
+                : Theme.of(context).dividerColor.withValues(alpha: 0.35),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    info.unlocked ? info.icon : Icons.lock_rounded,
+                    color: info.unlocked
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).disabledColor,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      info.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                info.description,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const Spacer(),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(999),
+                child: LinearProgressIndicator(
+                  value: info.progress.clamp(0, 1),
+                  minHeight: 7,
+                  backgroundColor: Theme.of(
+                    context,
+                  ).dividerColor.withValues(alpha: 0.22),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StrategyPanel extends ConsumerWidget {
+  const _StrategyPanel({required this.selected});
+
+  final KingdomStrategy selected;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Strategie du royaume',
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'Choisis la priorite active pour tes prochaines sessions.',
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+        const SizedBox(height: 10),
+        ...KingdomStrategy.values.map(
+          (strategy) => Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: _StrategyCard(
+              strategy: strategy,
+              selected: strategy == selected,
+              onTap: () {
+                ref
+                    .read(kingdomStrategyProvider.notifier)
+                    .setStrategy(strategy);
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _StrategyCard extends StatelessWidget {
+  const _StrategyCard({
+    required this.strategy,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final KingdomStrategy strategy;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Material(
+      color: selected
+          ? Theme.of(context).colorScheme.secondaryContainer
+          : (isDark ? const Color(0xFF172033) : Colors.white),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: BorderSide(
+          color: selected
+              ? Theme.of(context).colorScheme.secondary
+              : Theme.of(context).dividerColor.withValues(alpha: 0.35),
+          width: selected ? 2 : 1,
+        ),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox.square(
+                dimension: 42,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? Theme.of(context).colorScheme.onSecondaryContainer
+                              .withValues(alpha: 0.10)
+                        : Theme.of(
+                            context,
+                          ).colorScheme.primaryContainer.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(
+                    strategy.icon,
+                    color: selected
+                        ? Theme.of(context).colorScheme.onSecondaryContainer
+                        : Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      strategy.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      strategy.description,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        if (strategy.bonusXp > 0)
+                          RewardChip.xp(
+                            label: '+${strategy.bonusXp} XP',
+                            compact: true,
+                          ),
+                        if (strategy.bonusCoins > 0)
+                          RewardChip.coins(
+                            label: '+${strategy.bonusCoins} pieces',
+                            compact: true,
+                          ),
+                        if (strategy.bonusHpRecovery > 0)
+                          _SummaryPill(
+                            icon: Icons.favorite_rounded,
+                            label: '+${strategy.bonusHpRecovery} HP',
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              if (selected) ...[
+                const SizedBox(width: 8),
+                Icon(
+                  Icons.check_circle_rounded,
+                  color: Theme.of(context).colorScheme.secondary,
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -564,27 +1086,38 @@ class _SceneBuilding extends StatelessWidget {
               left: 4,
               right: 4,
               top: 0,
-              child: AnimatedOpacity(
-                duration: const Duration(milliseconds: 240),
-                opacity: built ? 1 : 0.38,
-                child: Image.asset(
-                  building.imageAsset,
-                  height: 82,
-                  fit: BoxFit.contain,
-                  filterQuality: FilterQuality.high,
-                  errorBuilder: (context, error, stackTrace) {
-                    return SizedBox.square(
-                      dimension: 72,
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: surface,
-                          borderRadius: BorderRadius.circular(999),
-                          border: Border.all(color: primary),
+              child: TweenAnimationBuilder<double>(
+                key: ValueKey(
+                  'map-${building.id}-${building.isBuilt}-${building.level}',
+                ),
+                tween: Tween(begin: built ? 1.16 : 1.0, end: 1),
+                duration: const Duration(milliseconds: 520),
+                curve: Curves.elasticOut,
+                builder: (context, scale, child) {
+                  return Transform.scale(scale: scale, child: child);
+                },
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 240),
+                  opacity: built ? 1 : 0.38,
+                  child: Image.asset(
+                    building.imageAsset,
+                    height: 82,
+                    fit: BoxFit.contain,
+                    filterQuality: FilterQuality.high,
+                    errorBuilder: (context, error, stackTrace) {
+                      return SizedBox.square(
+                        dimension: 72,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: surface,
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(color: primary),
+                          ),
+                          child: Icon(building.icon, color: primary),
                         ),
-                        child: Icon(building.icon, color: primary),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
               ),
             ),
@@ -788,13 +1321,21 @@ class _LevelBadge extends StatelessWidget {
   }
 }
 
-class _BuildingCard extends ConsumerWidget {
+class _BuildingCard extends ConsumerStatefulWidget {
   const _BuildingCard({required this.building});
 
   final KingdomBuilding building;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_BuildingCard> createState() => _BuildingCardState();
+}
+
+class _BuildingCardState extends ConsumerState<_BuildingCard> {
+  bool _celebrating = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final building = widget.building;
     final player = ref.watch(playerProvider);
     final canBuild =
         !building.isBuilt &&
@@ -806,148 +1347,165 @@ class _BuildingCard extends ConsumerWidget {
 
     return Card(
       elevation: 0,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Stack(
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _BuildingAvatar(building: building),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        building.name,
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w900),
+                      _BuildingAvatar(building: building),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              building.name,
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.w900),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(building.description),
+                            const SizedBox(height: 10),
+                            _LevelTrack(
+                              level: building.level,
+                              maxLevel: building.maxLevel,
+                              isBuilt: building.isBuilt,
+                            ),
+                            if (building.isBuilt) ...[
+                              const SizedBox(height: 8),
+                              _BuildingStageLabel(building: building),
+                            ],
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(building.description),
-                      const SizedBox(height: 10),
-                      _LevelTrack(
-                        level: building.level,
-                        maxLevel: building.maxLevel,
-                        isBuilt: building.isBuilt,
-                      ),
-                      if (building.isBuilt) ...[
-                        const SizedBox(height: 8),
-                        _BuildingStageLabel(building: building),
-                      ],
                     ],
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _SummaryPill(
-                  icon: Icons.paid_rounded,
-                  label: building.cost == 0
-                      ? 'Gratuit'
-                      : '${building.cost} pieces',
-                ),
-                _SummaryPill(
-                  icon: Icons.military_tech_rounded,
-                  label: 'Niv. ${building.requiredLevel}',
-                ),
-                if (building.isBuilt)
-                  _SummaryPill(
-                    icon: Icons.castle_rounded,
-                    label:
-                        'Batiment niv. ${building.level}/${building.maxLevel}',
-                  ),
-                if (building.hasBonus && building.isBuilt)
-                  _SummaryPill(
-                    icon: Icons.auto_awesome_rounded,
-                    label: building.bonusLabel,
-                  ),
-                if (building.hasBonus && building.canUpgrade)
-                  _SummaryPill(
-                    icon: Icons.trending_up_rounded,
-                    label: 'Prochain: ${building.nextBonusLabel}',
-                  ),
-                if (building.isBuilt && building.canUpgrade)
-                  _SummaryPill(
-                    icon: Icons.upgrade_rounded,
-                    label: 'Ameliorer: ${building.upgradeCost} pieces',
-                  ),
-                if (building.isBuilt && !building.canUpgrade)
-                  const _SummaryPill(
-                    icon: Icons.verified_rounded,
-                    label: 'Niveau max',
-                  ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerRight,
-              child: Wrap(
-                alignment: WrapAlignment.end,
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  if (!building.isBuilt)
-                    FilledButton.tonalIcon(
-                      onPressed: canBuild
-                          ? () async {
-                              final result = await ref
-                                  .read(kingdomProvider.notifier)
-                                  .buildBuilding(building.id);
-                              if (!context.mounted) {
-                                return;
-                              }
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    _messageFor(result, building.name),
-                                  ),
-                                ),
-                              );
-                            }
-                          : null,
-                      icon: Icon(
-                        lockedByLevel
-                            ? Icons.lock_rounded
-                            : Icons.construction_rounded,
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _SummaryPill(
+                        icon: Icons.paid_rounded,
+                        label: building.cost == 0
+                            ? 'Gratuit'
+                            : '${building.cost} pieces',
                       ),
-                      label: const Text('Construire'),
-                    )
-                  else
-                    FilledButton.tonalIcon(
-                      onPressed: canUpgrade
-                          ? () async {
-                              final result = await ref
-                                  .read(kingdomProvider.notifier)
-                                  .upgradeBuilding(building.id);
-                              if (!context.mounted) {
-                                return;
-                              }
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    _messageFor(result, building.name),
-                                  ),
-                                ),
-                              );
-                            }
-                          : null,
-                      icon: Icon(
-                        building.canUpgrade
-                            ? Icons.upgrade_rounded
-                            : Icons.verified_rounded,
+                      _SummaryPill(
+                        icon: Icons.military_tech_rounded,
+                        label: 'Niv. ${building.requiredLevel}',
                       ),
-                      label: Text(building.canUpgrade ? 'Ameliorer' : 'Max'),
+                      if (building.isBuilt)
+                        _SummaryPill(
+                          icon: Icons.castle_rounded,
+                          label:
+                              'Batiment niv. ${building.level}/${building.maxLevel}',
+                        ),
+                      if (building.hasBonus && building.isBuilt)
+                        _SummaryPill(
+                          icon: Icons.auto_awesome_rounded,
+                          label: building.bonusLabel,
+                        ),
+                      if (building.hasBonus && building.canUpgrade)
+                        _SummaryPill(
+                          icon: Icons.trending_up_rounded,
+                          label: 'Prochain: ${building.nextBonusLabel}',
+                        ),
+                      if (building.isBuilt && building.canUpgrade)
+                        _SummaryPill(
+                          icon: Icons.upgrade_rounded,
+                          label: 'Ameliorer: ${building.upgradeCost} pieces',
+                        ),
+                      if (building.isBuilt && !building.canUpgrade)
+                        const _SummaryPill(
+                          icon: Icons.verified_rounded,
+                          label: 'Niveau max',
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Wrap(
+                      alignment: WrapAlignment.end,
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        if (!building.isBuilt)
+                          FilledButton.tonalIcon(
+                            onPressed: canBuild
+                                ? () async {
+                                    final result = await ref
+                                        .read(kingdomProvider.notifier)
+                                        .buildBuilding(building.id);
+                                    if (!context.mounted) {
+                                      return;
+                                    }
+                                    _celebrateIfSuccess(result);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          _messageFor(result, building.name),
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                : null,
+                            icon: Icon(
+                              lockedByLevel
+                                  ? Icons.lock_rounded
+                                  : Icons.construction_rounded,
+                            ),
+                            label: const Text('Construire'),
+                          )
+                        else
+                          FilledButton.tonalIcon(
+                            onPressed: canUpgrade
+                                ? () async {
+                                    final result = await ref
+                                        .read(kingdomProvider.notifier)
+                                        .upgradeBuilding(building.id);
+                                    if (!context.mounted) {
+                                      return;
+                                    }
+                                    _celebrateIfSuccess(result);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          _messageFor(result, building.name),
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                : null,
+                            icon: Icon(
+                              building.canUpgrade
+                                  ? Icons.upgrade_rounded
+                                  : Icons.verified_rounded,
+                            ),
+                            label: Text(
+                              building.canUpgrade ? 'Ameliorer' : 'Max',
+                            ),
+                          ),
+                      ],
                     ),
+                  ),
                 ],
               ),
             ),
+            if (_celebrating)
+              Positioned.fill(
+                child: _BuildCelebration(
+                  color: Theme.of(context).colorScheme.secondary,
+                ),
+              ),
           ],
         ),
       ),
@@ -965,6 +1523,105 @@ class _BuildingCard extends ConsumerWidget {
       BuildResult.notEnoughCoins => 'Pas assez de pieces.',
       BuildResult.notFound => 'Batiment introuvable.',
     };
+  }
+
+  void _celebrateIfSuccess(BuildResult result) {
+    if (result != BuildResult.built && result != BuildResult.upgraded) {
+      return;
+    }
+
+    setState(() => _celebrating = true);
+    Future<void>.delayed(const Duration(milliseconds: 900), () {
+      if (mounted) {
+        setState(() => _celebrating = false);
+      }
+    });
+  }
+}
+
+class _BuildCelebration extends StatelessWidget {
+  const _BuildCelebration({required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0, end: 1),
+        duration: const Duration(milliseconds: 820),
+        curve: Curves.easeOutCubic,
+        builder: (context, value, child) {
+          final opacity = (1 - value).clamp(0.0, 1.0);
+
+          return Opacity(
+            opacity: opacity,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.10 * opacity),
+                    ),
+                  ),
+                ),
+                _CelebrationSparkle(
+                  left: 0.18,
+                  top: 0.22,
+                  value: value,
+                  color: color,
+                ),
+                _CelebrationSparkle(
+                  left: 0.74,
+                  top: 0.18,
+                  value: value * 0.92,
+                  color: color,
+                ),
+                _CelebrationSparkle(
+                  left: 0.62,
+                  top: 0.68,
+                  value: value * 0.82,
+                  color: color,
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _CelebrationSparkle extends StatelessWidget {
+  const _CelebrationSparkle({
+    required this.left,
+    required this.top,
+    required this.value,
+    required this.color,
+  });
+
+  final double left;
+  final double top;
+  final double value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      left: MediaQuery.sizeOf(context).width * left * 0.78,
+      top: 22 + (90 * top) - (26 * value),
+      child: Transform.scale(
+        scale: 0.7 + (0.55 * value),
+        child: Icon(
+          Icons.auto_awesome_rounded,
+          color: color,
+          size: 24,
+          shadows: [
+            Shadow(color: Colors.black.withValues(alpha: 0.18), blurRadius: 8),
+          ],
+        ),
+      ),
+    );
   }
 }
 
